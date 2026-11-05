@@ -1,0 +1,14 @@
+# Agent instructions
+.agents/
+
+# Dependencies
+node_modules/
+
+# Banco local e artefatos de execução
+data/
+*.log
+
+# Ambiente
+.env
+.env.*
+!.env.example
