@@ -102,6 +102,41 @@ function challengeFromRow(row) {
   };
 }
 
+function rewardFromRow(row) {
+  return {
+    id: row.id,
+    partnerId: row.partner_id,
+    partnerName: row.partner_name || '',
+    partnerDescription: row.partner_description || null,
+    partnerIcon: row.partner_icon || 'storefront',
+    title: row.title,
+    description: row.description,
+    category: row.category,
+    categoryLabel: row.category_label,
+    icon: row.icon,
+    pointsCost: row.points_cost,
+    stock: row.stock,
+    terms: row.terms,
+    isFeatured: Boolean(row.is_featured),
+    available: row.stock > 0,
+    createdAt: row.created_at,
+  };
+}
+
+function redemptionFromRow(row) {
+  return {
+    id: row.id,
+    rewardId: row.reward_id,
+    rewardTitle: row.reward_title || '',
+    partnerName: row.partner_name || '',
+    icon: row.reward_icon || 'redeem',
+    code: row.code,
+    pointsSpent: row.points_spent,
+    status: row.status,
+    dateTime: row.created_at,
+  };
+}
+
 function commentFromRow(row) {
   return {
     id: row.id,
@@ -153,6 +188,8 @@ module.exports = {
   recordFromRow,
   notificationFromRow,
   challengeFromRow,
+  rewardFromRow,
+  redemptionFromRow,
   commentFromRow,
   postFromRow,
   createNotification,

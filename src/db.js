@@ -107,6 +107,47 @@ CREATE TABLE IF NOT EXISTS challenge_progress (
   FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS partners (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  logo_icon TEXT NOT NULL DEFAULT 'storefront',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS rewards (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  partner_id INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL,
+  category_label TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  points_cost INTEGER NOT NULL,
+  stock INTEGER NOT NULL DEFAULT 0,
+  terms TEXT,
+  is_featured INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_rewards_category
+  ON rewards(category, points_cost);
+
+CREATE TABLE IF NOT EXISTS redemptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  reward_id INTEGER NOT NULL,
+  code TEXT NOT NULL UNIQUE,
+  points_spent INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (reward_id) REFERENCES rewards(id) ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS idx_redemptions_user_date
+  ON redemptions(user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,

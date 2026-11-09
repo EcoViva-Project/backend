@@ -59,15 +59,26 @@ function getSummary(userId) {
 
   const monthlyGoal = user.monthly_goal || 17;
 
+  const pointsSpent = db
+    .prepare(
+      `SELECT COALESCE(SUM(points_spent), 0) AS total
+       FROM redemptions WHERE user_id = ?`,
+    )
+    .get(userId).total;
+  const pointsEarned = totals.points;
+  const availablePoints = Math.max(pointsEarned - pointsSpent, 0);
+
   return {
-    points: totals.points,
+    points: availablePoints,
+    pointsEarned,
+    pointsSpent,
     actionsCount: totals.actionsCount,
     activeDays,
     monthlyActions,
     monthlyGoal,
     monthlyGoalProgress: Math.min(monthlyActions / monthlyGoal, 1),
     litersSaved: totals.litersSaved,
-    level: levelFromPoints(totals.points),
+    level: levelFromPoints(pointsEarned),
   };
 }
 

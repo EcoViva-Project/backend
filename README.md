@@ -7,7 +7,8 @@
 
 API REST do **EcoViva**, aplicativo de hábitos sustentáveis. Gerencia contas,
 catálogo de ações ecológicas, registros de ações, pontuação/níveis, conquistas,
-desafios coletivos, notificações e o feed da comunidade.
+desafios coletivos, notificações, o feed da comunidade e o resgate de
+recompensas oferecidas por empresas parceiras.
 
 - **App (Flutter):** https://github.com/EcoViva-Project/app
 - **API local:** `http://127.0.0.1:3000/api`
@@ -66,7 +67,8 @@ A API sobe em `http://127.0.0.1:3000/api` e cria o SQLite em `./data/eco.db`.
 | Bairro | Jardim das Flores |
 
 O seed cria 1 usuária, 6 ações, 42 registros (~1.240 pontos e 28 L economizados),
-4 desafios e 4 publicações com comentários.
+4 desafios, 4 publicações com comentários, 5 parceiros e 9 recompensas
+(produto, serviço, desconto e jogo).
 
 ### Scripts
 
@@ -75,7 +77,7 @@ O seed cria 1 usuária, 6 ações, 42 registros (~1.240 pontos e 28 L economizad
 | `npm run dev` | Sobe com `node --watch` e recarrega ao salvar |
 | `npm start` | Sobe sem watch (produção) |
 | `npm run seed` | Recria o banco e insere os dados demo |
-| `npm test` | Runner nativo do Node (`node --test`); hoje há 0 testes |
+| `npm test` | Runner nativo do Node (`node --test`) com 56 testes de integração |
 
 ---
 
@@ -83,16 +85,22 @@ O seed cria 1 usuária, 6 ações, 42 registros (~1.240 pontos e 28 L economizad
 
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
-| `PORT` | `3000` | Porta HTTP |
-| `NODE_ENV` | — | Quando **não** é `production`, `/auth/forgot-password` retorna `devCode` |
-| `JWT_SECRET` | `eco-dev-secret-change-me` | Segredo dos tokens — **troque em produção** |
+| `PORT` | `3000` | Porta HTTP (inteiro positivo) |
+| `NODE_ENV` | `development` | Em `production` exige `JWT_SECRET` forte e oculta o `devCode` |
+| `JWT_SECRET` | `eco-dev-secret-change-me` | Segredo dos tokens — **obrigatório e com ≥32 caracteres em produção** |
 | `JWT_EXPIRES_IN` | `7d` | Validade do token (formato aceito pelo `jsonwebtoken`) |
-| `RESET_CODE_TTL_MINUTES` | `30` | Validade do código de recuperação de senha |
+| `RESET_CODE_TTL_MINUTES` | `30` | Validade do código de recuperação (inteiro positivo) |
 | `DB_PATH` | `<repo>/data/eco.db` | Caminho do arquivo SQLite |
+| `CORS_ORIGIN` | `*` | Origem(ns) permitida(s); aceita lista separada por vírgula |
 
 O arquivo `.env` é ignorado pelo Git; `.env.example` é o template versionado.
 Se rodar `node src/server.js` diretamente (sem npm), use
 `node --env-file-if-exists=.env src/server.js`.
+
+A configuração é carregada em `src/config.js` (função `loadConfig`). Valores
+inválidos de `PORT`/`RESET_CODE_TTL_MINUTES` interrompem a inicialização, e com
+`NODE_ENV=production` a API se recusa a subir sem um `JWT_SECRET` forte
+(diferente do padrão de desenvolvimento e com ao menos 32 caracteres).
 
 ---
 
@@ -177,6 +185,20 @@ pela `quantity`.
 | `POST` | `/posts/:id/comments` | Comenta (`content` ≤ 500) |
 | `DELETE` | `/posts/:id` | Só o autor pode excluir |
 
+### Recompensas — `/api/rewards`
+
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| `GET` | `/` | Recompensas ativas (`?category=`, `?search=`, `?sort=points\|points_desc\|alphabetical`) |
+| `GET` | `/:id` | Detalhe da recompensa |
+| `POST` | `/:id/redeem` | Resgata, debita pontos, reduz estoque e gera código único |
+| `GET` | `/redemptions` | Histórico de resgates + `summary` atualizado |
+
+Categorias: `produto`, `servico`, `desconto` e `jogo`. O saldo disponível
+(`summary.points`) é `pointsEarned − pointsSpent`; o nível continua calculado
+pelos pontos ganhos. Resgates devolvem 404 (recompensa inexistente/inativa) ou
+409 (esgotada/saldo insuficiente) em JSON `{ "error": "..." }`.
+
 ### Exemplos
 
 ```bash
@@ -211,6 +233,9 @@ curl -X POST http://127.0.0.1:3000/api/actions/1/records \
 | `posts` | Publicações da comunidade |
 | `post_likes` | Likes (PK composta `post_id` + `user_id`) |
 | `post_comments` | Comentários |
+| `partners` | Empresas parceiras que criam recompensas |
+| `rewards` | Produtos, serviços, descontos e itens de jogos |
+| `redemptions` | Resgates com código, pontos gastos e status |
 
 O SQLite roda com `journal_mode = WAL` e `foreign_keys = ON`. O schema é
 idempotente (`CREATE TABLE IF NOT EXISTS`) e aplicado na inicialização.
@@ -225,7 +250,10 @@ idempotente (`CREATE TABLE IF NOT EXISTS`) e aplicado na inicialização.
 - **Desafio concluído** gera um `action_record` com os pontos da recompensa e uma
   notificação.
 - **Notificações automáticas** ao registrar ação, desbloquear conquista,
-  concluir desafio e receber comentário.
+  concluir desafio, receber comentário e resgatar recompensa.
+- **Recompensas de parceiros:** troca de pontos por produtos/serviços/descontos/
+  itens de jogos. O resgate reduz o estoque, gera código `ECO-XXXXXXXX` e
+  registra no histórico; o nível não cai ao gastar pontos.
 
 ---
 
@@ -237,7 +265,7 @@ eco-backend/
 ├── src/
 │   ├── middleware/auth.js   # assinatura e verificação de JWT
 │   ├── routes/              # auth, users, actions, records, progress,
-│   │                        # notifications, challenges, community
+│   │                        # notifications, challenges, community, rewards
 │   ├── services/
 │   │   ├── progress.js      # níveis, resumo e conquistas
 │   │   └── serializers.js   # mapeamento row -> JSON
@@ -246,6 +274,10 @@ eco-backend/
 │   ├── db.js                # conexão + schema
 │   ├── seed.js              # dados de demonstração
 │   └── server.js            # listen + shutdown gracioso
+├── test/                    # testes de integração (node:test)
+│   ├── helpers.js           # servidor efêmero + SQLite em memória + fixtures
+│   └── *.test.js            # auth, users, actions, progress, challenges,
+│                            # community e rewards
 ├── .env.example
 ├── package.json
 └── package-lock.json
@@ -255,14 +287,17 @@ eco-backend/
 
 ## ⚠️ Segurança e limitações
 
-- `CORS` aberto (`cors()` sem origem restrita) — restrinja em produção.
-- `JWT_SECRET` tem default de desenvolvimento; **defina um segredo forte**.
+- `CORS_ORIGIN` tem default `*` (qualquer origem) — em produção defina a lista de
+  origens permitidas separada por vírgula.
+- `JWT_SECRET` tem default de desenvolvimento; em produção a API só sobe com um
+  segredo forte (≥32 caracteres).
 - Sem rate limit, verificação de e-mail ou proteção contra força bruta.
 - O código de recuperação é retornado na resposta quando `NODE_ENV !== production`
   (não há provedor de e-mail integrado).
-- Sem testes automatizados, CI ou Dockerfile.
+- Sem CI ou Dockerfile.
 - SQLite local (arquivo único) — não indicado para múltiplas instâncias.
-- `node --test` existe no `package.json`, mas ainda não há arquivos de teste.
+- `npm test` cobre os endpoints principais com `node:test` e SQLite em memória;
+  ainda não há testes de carga, rate limit ou integração com e-mail real.
 
 ---
 

@@ -138,6 +138,154 @@ const CHALLENGES = [
   },
 ];
 
+const PARTNERS = [
+  {
+    name: 'Mercado Verde',
+    description: 'Mercearia sustentável com produtos a granel e orgânicos.',
+    logoIcon: 'storefront',
+  },
+  {
+    name: 'EcoClean Serviços',
+    description: 'Limpeza ecológica residencial com produtos biodegradáveis.',
+    logoIcon: 'cleaning_services',
+  },
+  {
+    name: 'Café Raízes',
+    description: 'Cafeteria de bairro com grãos de produtores locais.',
+    logoIcon: 'local_cafe',
+  },
+  {
+    name: 'Floresta Games',
+    description: 'Estúdio de jogos com temáticas ambientais.',
+    logoIcon: 'sports_esports',
+  },
+  {
+    name: 'Bike Urbana',
+    description: 'Oficina e loja de bicicletas para mobilidade ativa.',
+    logoIcon: 'directions_bike',
+  },
+];
+
+const REWARDS = [
+  {
+    partner: 'Mercado Verde',
+    title: 'Kit de sacolas reutilizáveis',
+    description:
+      'Conjunto com três sacolas de algodão orgânico para as compras do dia a dia.',
+    category: 'produto',
+    categoryLabel: 'Produto',
+    icon: 'shopping_bag',
+    pointsCost: 400,
+    stock: 25,
+    terms: 'Retire na loja em até 30 dias após o resgate.',
+    isFeatured: 1,
+  },
+  {
+    partner: 'Mercado Verde',
+    title: 'Cesta de hortifrúti orgânico',
+    description:
+      'Seleção semanal de frutas e verduras cultivadas por produtores locais.',
+    category: 'produto',
+    categoryLabel: 'Produto',
+    icon: 'eco',
+    pointsCost: 900,
+    stock: 10,
+    terms: 'Entrega agendada no bairro. Sujeito à disponibilidade da safra.',
+    isFeatured: 0,
+  },
+  {
+    partner: 'EcoClean Serviços',
+    title: 'Limpeza ecológica residencial',
+    description:
+      'Duas horas de limpeza com produtos biodegradáveis para a sua casa.',
+    category: 'servico',
+    categoryLabel: 'Serviço',
+    icon: 'cleaning_services',
+    pointsCost: 1200,
+    stock: 8,
+    terms: 'Agendamento com antecedência mínima de 3 dias.',
+    isFeatured: 1,
+  },
+  {
+    partner: 'Café Raízes',
+    title: 'Café especial grátis',
+    description:
+      'Um café coado especial de 200 ml na unidade do bairro.',
+    category: 'desconto',
+    categoryLabel: 'Desconto',
+    icon: 'local_cafe',
+    pointsCost: 150,
+    stock: 60,
+    terms: 'Válido de segunda a sexta, das 8h às 17h.',
+    isFeatured: 0,
+  },
+  {
+    partner: 'Café Raízes',
+    title: '15% de desconto no combo',
+    description:
+      'Desconto em qualquer combo de café com pão de fermentação natural.',
+    category: 'desconto',
+    categoryLabel: 'Desconto',
+    icon: 'percent',
+    pointsCost: 90,
+    stock: 100,
+    terms: 'Não cumulativo com outras promoções.',
+    isFeatured: 0,
+  },
+  {
+    partner: 'Floresta Games',
+    title: 'Skin Guardião da Floresta',
+    description:
+      'Pacote de cosméticos digitais exclusivo do jogo Floresta Viva.',
+    category: 'jogo',
+    categoryLabel: 'Jogo',
+    icon: 'sports_esports',
+    pointsCost: 500,
+    stock: 40,
+    terms: 'Código enviado por e-mail após o resgate.',
+    isFeatured: 1,
+  },
+  {
+    partner: 'Floresta Games',
+    title: 'Passe de temporada Floresta Viva',
+    description:
+      'Acesso ao passe de temporada com missões e recompensas temáticas.',
+    category: 'jogo',
+    categoryLabel: 'Jogo',
+    icon: 'sports_esports',
+    pointsCost: 1500,
+    stock: 5,
+    terms: 'Código de uso único, vinculado à sua conta no jogo.',
+    isFeatured: 0,
+  },
+  {
+    partner: 'Bike Urbana',
+    title: 'Revisão básica de bicicleta',
+    description:
+      'Ajuste de freios, transmissão e calibragem dos pneus na oficina parceira.',
+    category: 'servico',
+    categoryLabel: 'Serviço',
+    icon: 'directions_bike',
+    pointsCost: 700,
+    stock: 12,
+    terms: 'Peças não inclusas. Agende pelo telefone da oficina.',
+    isFeatured: 0,
+  },
+  {
+    partner: 'Bike Urbana',
+    title: 'Camisa oficial EcoViva',
+    description:
+      'Camisa de algodão reciclado com estampa das pedaladas comunitárias.',
+    category: 'produto',
+    categoryLabel: 'Produto',
+    icon: 'checkroom',
+    pointsCost: 650,
+    stock: 0,
+    terms: 'Tamanhos sujeitos ao estoque disponível.',
+    isFeatured: 0,
+  },
+];
+
 const POSTS = [
   {
     authorName: 'Marina Lopes',
@@ -265,6 +413,9 @@ function seed() {
   const passwordHash = bcrypt.hashSync(DEMO_PASSWORD, 10);
 
   const run = db.transaction(() => {
+    db.prepare('DELETE FROM redemptions').run();
+    db.prepare('DELETE FROM rewards').run();
+    db.prepare('DELETE FROM partners').run();
     db.prepare('DELETE FROM post_comments').run();
     db.prepare('DELETE FROM post_likes').run();
     db.prepare('DELETE FROM posts').run();
@@ -369,6 +520,47 @@ function seed() {
       `INSERT INTO challenge_progress (user_id, challenge_id, completed_steps, joined, completed)
        VALUES (?, ?, 0, 1, 0)`,
     ).run(userId, challengeIds[2]);
+
+    const insertPartner = db.prepare(
+      `INSERT INTO partners (name, description, logo_icon, created_at)
+       VALUES (?, ?, ?, ?)`,
+    );
+    const partnerIds = new Map();
+    for (const partner of PARTNERS) {
+      const info = insertPartner.run(
+        partner.name,
+        partner.description,
+        partner.logoIcon,
+        iso(90),
+      );
+      partnerIds.set(partner.name, Number(info.lastInsertRowid));
+    }
+
+    const insertReward = db.prepare(
+      `INSERT INTO rewards
+        (partner_id, title, description, category, category_label, icon,
+         points_cost, stock, terms, is_featured, active, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+    );
+    for (const reward of REWARDS) {
+      const partnerId = partnerIds.get(reward.partner);
+      if (!partnerId) {
+        throw new Error(`Parceiro não encontrado para a recompensa: ${reward.title}`);
+      }
+      insertReward.run(
+        partnerId,
+        reward.title,
+        reward.description,
+        reward.category,
+        reward.categoryLabel,
+        reward.icon,
+        reward.pointsCost,
+        reward.stock,
+        reward.terms,
+        reward.isFeatured,
+        iso(30),
+      );
+    }
 
     const insertNotification = db.prepare(
       `INSERT INTO notifications (user_id, category, title, message, read, created_at)
