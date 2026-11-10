@@ -129,21 +129,25 @@ function createComment(user, id, data) {
   const content = clean(data.content);
   if (!content) fail(400, 'Escreva um comentário.');
   if (content.length > 500) fail(400, 'O comentário deve ter no máximo 500 caracteres.');
-  const info = db
-    .prepare(
-      `INSERT INTO post_comments (post_id, user_id, author_name, author_initials, content, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-    )
-    .run(post.id, user.id, user.name, user.initials, content, iso(clock.now()));
-  if (post.user_id !== null && post.user_id !== user.id) {
-    const owner = db.prepare('SELECT id FROM users WHERE id = ?').get(post.user_id);
-    if (owner) {
-      notify(owner.id, 'comunidade', 'Novo comentário', `${user.name} comentou na sua publicação.`, {
-        target: '/comunidade',
-      });
+  // Comentário e aviso ao autor juntos: se um falhar, nada é gravado.
+  const commentId = db.transaction(() => {
+    const info = db
+      .prepare(
+        `INSERT INTO post_comments (post_id, user_id, author_name, author_initials, content, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(post.id, user.id, user.name, user.initials, content, iso(clock.now()));
+    if (post.user_id !== null && post.user_id !== user.id) {
+      const owner = db.prepare('SELECT id FROM users WHERE id = ?').get(post.user_id);
+      if (owner) {
+        notify(owner.id, 'comunidade', 'Novo comentário', `${user.name} comentou na sua publicação.`, {
+          target: '/comunidade',
+        });
+      }
     }
-  }
-  return commentJson(db.prepare('SELECT * FROM post_comments WHERE id = ?').get(info.lastInsertRowid));
+    return info.lastInsertRowid;
+  })();
+  return commentJson(db.prepare('SELECT * FROM post_comments WHERE id = ?').get(commentId));
 }
 
 function deletePost(user, id) {
@@ -200,7 +204,7 @@ function communityStats(user) {
   if (top.length > 0) {
     for (const person of db
       .prepare(
-        `SELECT id, name, initials, neighborhood FROM users
+        `SELECT id, name, initials, neighborhood, privacy_location FROM users
          WHERE id IN (${top.map(() => '?').join(', ')})`,
       )
       .all(...top.map(([id]) => id))) {
@@ -210,11 +214,13 @@ function communityStats(user) {
   const ranking = top.map(([id, points], index) => {
     const person = people.get(id);
     const isMe = id === user.id;
+    // O bairro de outra pessoa só aparece se ela aceitou aparecer no mapa.
+    const showNeighborhood = isMe || flag(person?.privacy_location);
     return {
       position: index + 1,
       name: isMe ? String(user.name) : shortName(person?.name),
       initials: person?.initials ?? '?',
-      neighborhood: person?.neighborhood ?? null,
+      neighborhood: showNeighborhood ? (person?.neighborhood ?? null) : null,
       points,
       isMe,
     };

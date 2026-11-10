@@ -12,8 +12,9 @@ collectionPoints.get('/', (req, res) => {
   return res.json({ points: community.listCollectionPoints(req.user, req.query) });
 });
 
+// Pública: a lista de nomes de bairros é usada pelo cadastro, antes de haver
+// sessão (como no modo local do app). Não tem dado de nenhuma pessoa.
 const neighborhoods = express.Router();
-neighborhoods.use(authRequired);
 neighborhoods.get('/neighborhoods', (req, res) => {
   return res.json({ neighborhoods: places.searchNeighborhoods(String(req.query.search ?? '')) });
 });

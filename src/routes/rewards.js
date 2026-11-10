@@ -1,6 +1,7 @@
 const express = require('express');
 const { authRequired } = require('../middleware/auth');
-const { bodyOf } = require('../services/errors');
+const { createLimiter } = require('../middleware/rateLimit');
+const { ApiError, bodyOf } = require('../services/errors');
 const { summary } = require('../services/progress');
 const rewards = require('../services/rewards');
 
@@ -19,9 +20,33 @@ router.get('/redemptions', (req, res) => {
   });
 });
 
+/** Tentativas erradas do código do parceiro por pessoa e cupom, na janela. */
+const PIN_MAX_ATTEMPTS = 5;
+const PIN_WINDOW_MINUTES = 15;
+const PIN_TOO_MANY =
+  'Muitas tentativas erradas do código do parceiro. Aguarde alguns minutos e tente novamente.';
+
+// O PIN do parceiro é curto: sem limite, daria para descobri-lo testando todos.
+// Só as tentativas erradas contam; a conferência certa não gasta tentativa.
+const pinAttempts = createLimiter({
+  max: PIN_MAX_ATTEMPTS,
+  windowMs: PIN_WINDOW_MINUTES * 60 * 1000,
+});
+
 /** Conferência do cupom no parceiro: `{ "pin": "1234" }`. */
 router.post('/redemptions/:id/use', (req, res) => {
-  return res.json({ redemption: rewards.useRedemption(req.user, req.params.id, bodyOf(req)) });
+  const key = `${req.user.id}|${String(req.params.id)}`;
+  const wait = pinAttempts.peek(key);
+  if (wait > 0) {
+    res.set('Retry-After', String(wait));
+    return res.status(429).json({ error: PIN_TOO_MANY });
+  }
+  try {
+    return res.json({ redemption: rewards.useRedemption(req.user, req.params.id, bodyOf(req)) });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) pinAttempts.hit(key);
+    throw error;
+  }
 });
 
 router.get('/:id', (req, res) => {

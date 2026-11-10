@@ -280,8 +280,17 @@ function unlocksOf(userId) {
  * Grava as conquistas recém-atingidas, credita o bônus (registro do tipo
  * `achievement`, fora do teto semanal) e avisa o usuário.
  * `at` e `silent` existem para a carga dos dados de demonstração.
+ *
+ * Tudo numa transação: o selo nunca fica gravado sem o bônus (nem o bônus sem
+ * o selo). Chamada de dentro de outra transação (registro de ação, carga de
+ * demonstração), o better-sqlite3 usa um SAVEPOINT, e quem chamou decide o
+ * resto.
  */
-function syncAchievements(user, { at = null, silent = false } = {}) {
+function syncAchievements(user, options = {}) {
+  return db.transaction(() => unlockReachedAchievements(user, options))();
+}
+
+function unlockReachedAchievements(user, { at = null, silent = false } = {}) {
   const when = at ?? clock.now();
   const unlocked = unlocksOf(user.id);
   const unlockedNow = [];

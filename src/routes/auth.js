@@ -39,10 +39,25 @@ function sameHash(a, b) {
   return first.length === second.length && crypto.timingSafeEqual(first, second);
 }
 
-/** Hash fixo para comparar a senha mesmo quando o e-mail não existe (tempo parecido). */
-const DUMMY_HASH = bcrypt.hashSync('eco-senha-inexistente', 4);
+/**
+ * Hash para comparar a senha mesmo quando o e-mail não existe. Usa o mesmo
+ * custo (`BCRYPT_ROUNDS`) das senhas de verdade: com custo menor, a resposta
+ * para um e-mail sem conta seria mais rápida e revelaria quais e-mails existem.
+ * Refeito só se o custo configurado mudar.
+ */
+let dummy = null;
+function dummyHash() {
+  if (!dummy || dummy.rounds !== config.bcryptRounds) {
+    dummy = {
+      rounds: config.bcryptRounds,
+      hash: bcrypt.hashSync('eco-senha-inexistente', config.bcryptRounds),
+    };
+  }
+  return dummy.hash;
+}
+dummyHash();
 
-router.post('/register', (req, res) => {
+router.post('/register', rateLimit('register'), (req, res) => {
   const data = bodyOf(req);
   const name = clean(data.name);
   const email = clean(data.email).toLowerCase();
@@ -73,7 +88,7 @@ router.post('/login', rateLimit('login'), (req, res) => {
   if (!email || !password) fail(400, 'Informe e-mail e senha.');
 
   const user = findUserByEmail(email);
-  const valid = bcrypt.compareSync(password, user ? user.password_hash : DUMMY_HASH);
+  const valid = bcrypt.compareSync(password, user ? user.password_hash : dummyHash());
   if (!user || !valid) fail(401, 'E-mail ou senha inválidos.');
 
   return res.json({ token: signToken(user), user: publicUser(user) });
@@ -181,3 +196,4 @@ router.post(
 );
 
 module.exports = router;
+module.exports.dummyHash = dummyHash;

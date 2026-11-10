@@ -90,10 +90,10 @@ vencido.
 | `BCRYPT_ROUNDS` | `10` | Custo do bcrypt (4 a 15) |
 | `RESET_CODE_TTL_MINUTES` | `30` | Validade do código de recuperação |
 | `EXPOSE_RESET_CODE` | `false` | `true` devolve o código de recuperação na resposta (`devCode`), para testes e demonstração. **Proibido em produção** |
-| `AUTH_RATE_LIMIT_MAX` | `10` | Tentativas por IP + e-mail na janela (por IP: 5 vezes isso) |
+| `AUTH_RATE_LIMIT_MAX` | `10` | Tentativas por IP + e-mail na janela (por IP: 5 vezes isso) em `register`, `login`, `forgot-password`, `reset-password` e `change-password` |
 | `AUTH_RATE_LIMIT_WINDOW_MINUTES` | `15` | Janela do limitador |
 | `WEEKLY_POINTS_CAP` | `400` | Teto semanal de pontos de ações |
-| `TRUST_PROXY` | `false` | `true` atrás de proxy, para o limitador ver o IP real |
+| `TRUST_PROXY` | `false` | Atrás de proxy, para o limitador ver o IP real: o número de proxies na frente da API (normalmente `1`) ou a lista de IPs/sub-redes deles, separados por vírgula (`loopback, 10.0.0.0/8`). `false`, `0` ou vazio desliga. Nunca confia em todos: o valor antigo `true` vale como `1` (confiar em todos deixaria o cliente escolher o próprio IP pelo `X-Forwarded-For` e escapar do limitador) |
 | `DB_PATH` | `<repo>/data/eco.db` | Arquivo SQLite |
 | `CORS_ORIGIN` | `*` | Origens permitidas, separadas por vírgula |
 
@@ -132,21 +132,23 @@ dois repositórios. Código: `src/services/economy.js` (espelho de `economy.dart
 - **Privacidade:** a posição de uma pessoa é o centro do bairro com um
   deslocamento fixo de algumas centenas de metros (mesmo cálculo do app); o
   endereço completo e o e-mail nunca saem nas rotas de comunidade; quem desliga
-  `privacyLocation` some do mapa dos outros.
+  `privacyLocation` some do mapa dos outros e aparece no ranking sem o bairro
+  (`neighborhood: null`; a própria pessoa continua vendo o seu).
 
 ---
 
 ## 🔌 Endpoints
 
 Todas as rotas ficam sob `/api` e respondem JSON; erros vêm como
-`{ "error": "..." }`. Exceto `health`, `register`, `login`, `forgot-password` e
-`reset-password`, todas exigem `Authorization: Bearer <token>`.
+`{ "error": "..." }`. Exceto `health`, `register`, `login`, `forgot-password`,
+`reset-password` e `places/neighborhoods`, todas exigem
+`Authorization: Bearer <token>`.
 
 ### Auth — `/api/auth`
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `POST` | `/register` | `name`, `email`, `password` e, opcionais, `cep`, `street`, `number`, `complement`, `neighborhood`, `city`, `state` |
+| `POST` | `/register` | `name`, `email`, `password` e, opcionais, `cep`, `street`, `number`, `complement`, `neighborhood`, `city`, `state` (limitado) |
 | `POST` | `/login` | `{ token, user }` (limitado) |
 | `GET` | `/me` | Usuário autenticado |
 | `POST` | `/forgot-password` | Mesma resposta com e sem conta (limitado) |
@@ -213,7 +215,7 @@ Categorias: `sistema`, `conquista`, `desafio`, `comunidade` e `recompensa`.
 | `GET` | `/community/stats` | **Novo.** Membros, vizinhos ativos (7 dias), ações de hoje e da semana, litros e pontos da semana, meta coletiva, ranking dos 5 primeiros (nome curto) e a posição do usuário |
 | `GET` | `/community/map` | **Novo.** Centro, o próprio usuário, vizinhos que aceitaram aparecer (posição aproximada, nome curto) e pontos de coleta com coordenada |
 | `GET` | `/collection-points` | **Novo.** Pontos de coleta com `distanceMeters`, do mais perto ao mais longe (`?type=`, `?search=`) |
-| `GET` | `/places/neighborhoods` | **Novo.** Busca de bairros para o cadastro (`?search=`) |
+| `GET` | `/places/neighborhoods` | **Novo.** Busca de bairros para o cadastro (`?search=`). **Pública:** o cadastro usa antes do login |
 | `GET` | `/tips/today` | **Novo.** Dica do dia |
 
 ### Recompensas — `/api/rewards`
@@ -224,7 +226,7 @@ Categorias: `sistema`, `conquista`, `desafio`, `comunidade` e `recompensa`.
 | `GET` | `/:id` | Detalhe |
 | `POST` | `/:id/redeem` | Resgata (em transação): 404, ou 409 se esgotada, sem saldo ou no limite |
 | `GET` | `/redemptions` | Cupons com `status`, `expiresAt`, `usedAt` + `summary` |
-| `POST` | `/redemptions/:id/use` | **Novo.** `{ pin }` do parceiro: 403 código errado, 409 usado ou vencido, 404 de outra pessoa |
+| `POST` | `/redemptions/:id/use` | **Novo.** `{ pin }` do parceiro: 403 código errado, 409 usado ou vencido, 404 de outra pessoa; 429 (com `Retry-After`) depois de 5 códigos errados no mesmo cupom em 15 minutos |
 
 ### Exemplos
 
@@ -259,6 +261,30 @@ Um banco novo passa pelas duas migrações, então banco novo e banco antigo
 migrado chegam ao mesmo esquema (há um teste para isso). Para mudar o esquema,
 acrescente uma migração no fim da lista; nunca edite uma que já foi aplicada.
 
+**Dados de referência.** A migração só cria colunas e tabelas; um banco criado
+pelo seed do ramo `main` ficaria com parceiros sem PIN (nenhum cupom poderia
+ser conferido), ações sem limite e sem pontos de coleta, dicas e meta coletiva.
+Por isso, a cada inicialização, logo depois das migrações, `src/referenceData.js`
+completa o que falta, numa transação, a partir do catálogo do seed
+(`src/catalog.js`):
+
+- `collection_points` vazia recebe os pontos de
+  `src/data/pontos-de-coleta-rio-preto.json`; `tips` vazia recebe as dicas do
+  catálogo; sem nenhuma linha em `community_goals`, entra a meta coletiva padrão
+  (400 ações por semana);
+- ações com o título de uma ação do catálogo e **sem nenhum limite**
+  (`daily_limit` e `weekly_limit` nulos) recebem os limites do catálogo; os
+  pontos passam ao valor novo **só** se ainda forem o padrão antigo daquela ação
+  (por exemplo 15 → 5 na torneira); um valor trocado à mão fica como está;
+- parceiros com o nome de um parceiro do catálogo e PIN vazio recebem o PIN do
+  catálogo (`1234`, o de demonstração); outros parceiros com PIN vazio ficam
+  como estão e a API escreve um aviso no log com o nome deles (os cupons deles
+  só podem ser conferidos depois que alguém definir o PIN).
+
+Num banco que já tem esses dados (inclusive um recém-criado por `npm run seed`)
+o passo não muda nada. Ele não mexe em desafios, recompensas, usuários nem
+registros.
+
 Tabelas: `users`, `password_resets`, `actions`, `action_records`,
 `notifications`, `challenges`, `challenge_progress`, `partners`, `rewards`,
 `redemptions`, `posts`, `post_likes`, `post_comments`, `user_achievements`,
@@ -270,9 +296,16 @@ Tabelas: `users`, `password_resets`, `actions`, `action_records`,
 
 O que existe:
 
-- **Limite de tentativas** em memória para login, `forgot-password`,
-  `reset-password` e `change-password`: por IP + e-mail e por IP; passou do
-  limite, 429 com `Retry-After`.
+- **Limite de tentativas** em memória para `register`, login,
+  `forgot-password`, `reset-password` e `change-password`: por IP + e-mail e
+  por IP; passou do limite, 429 com `Retry-After`. O limite por IP é conferido
+  primeiro, o e-mail é guardado só como hash e o número de contadores tem teto
+  (10.000 por rota; cheio, saem os vencidos e depois os mais antigos).
+- **Conferência do cupom:** no máximo 5 códigos de parceiro errados por pessoa
+  e cupom a cada 15 minutos (429 depois disso); o código certo não gasta
+  tentativa.
+- **Login** com e-mail sem conta compara a senha com um hash do mesmo custo
+  (`BCRYPT_ROUNDS`), para o tempo de resposta não revelar quais e-mails existem.
 - **Código de recuperação** de 6 dígitos guardado só como hash, válido por 30
   minutos e invalidado depois de 5 tentativas erradas. A resposta de
   `forgot-password` é a mesma para e-mail com e sem conta.
@@ -291,10 +324,14 @@ O que **não** existe (limitações conhecidas):
   `EXPOSE_RESET_CODE=true` (demonstração). Fora disso, a recuperação de senha
   não funciona até integrar um provedor de e-mail.
 - O limitador fica na memória do processo: zera ao reiniciar e não serve para
-  várias instâncias. Atrás de proxy, ligue `TRUST_PROXY=true`.
+  várias instâncias. Atrás de proxy, defina `TRUST_PROXY` com o número de
+  proxies (normalmente `1`) ou com os endereços deles.
 - Não há verificação de e-mail no cadastro nem bloqueio de conta.
 - O código de conferência dos parceiros é um PIN curto, digitado no aparelho de
-  quem resgatou; serve para a demonstração, não como garantia contra fraude.
+  quem resgatou; serve para a demonstração, não como garantia contra fraude. As
+  tentativas são limitadas (5 erradas por cupom a cada 15 minutos, na memória
+  do processo), o que impede testar todos os códigos de uma vez, mas não
+  substitui um PIN próprio e longo por parceiro.
 - `CORS_ORIGIN` padrão é `*`; em produção, liste as origens.
 - SQLite em arquivo único: não indicado para várias instâncias. Sem CI nem
   Dockerfile.
@@ -324,10 +361,13 @@ eco-backend/
 │   │   ├── validation.js      # validação dos dados de conta
 │   │   ├── notifications.js, util.js, errors.js
 │   ├── migrations.js          # esquema versionado (PRAGMA user_version)
+│   ├── catalog.js             # catálogo do seed (ações, parceiros, dicas, meta, pontos de coleta)
+│   ├── referenceData.js       # completa um banco antigo na inicialização
 │   ├── app.js, config.js, db.js, seed.js, server.js
 └── test/                      # node:test, banco em memória, porta aleatória
     ├── local-api.test.js      # casos do modo local do app, portados
     ├── security.test.js, migrations.test.js, config.test.js
+    ├── reference-data.test.js # banco antigo em arquivo (porta aleatória)
     └── auth, users, actions, progress-notifications, challenges, community,
         rewards, cors
 ```

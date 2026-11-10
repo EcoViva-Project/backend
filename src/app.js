@@ -17,8 +17,9 @@ const placeRoutes = require('./routes/places');
 
 const app = express();
 
-// Atrás de um proxy (Render, Railway, nginx), TRUST_PROXY=true faz `req.ip`
-// ser o IP real de quem chamou, usado pelo limitador de tentativas.
+// Atrás de um proxy (Render, Railway, nginx), TRUST_PROXY (número de proxies ou
+// lista de endereços, nunca "confiar em todos") faz `req.ip` ser o IP real de
+// quem chamou, usado pelo limitador de tentativas.
 app.set('trust proxy', config.trustProxy);
 
 const corsOrigins = config.corsOrigin

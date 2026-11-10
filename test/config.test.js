@@ -92,7 +92,8 @@ test('config: lê as variáveis informadas', () => {
   assert.equal(config.authRateLimitMax, 3);
   assert.equal(config.authRateLimitWindowMinutes, 5);
   assert.equal(config.bcryptRounds, 12);
-  assert.equal(config.trustProxy, true);
+  // O antigo TRUST_PROXY=true vale como um proxy (nunca como confiar em todos).
+  assert.equal(config.trustProxy, 1);
   assert.equal(config.corsOrigin, 'http://localhost:8080, https://eco.example.com');
 });
 
@@ -146,4 +147,23 @@ test('config: produção recusa EXPOSE_RESET_CODE=true', () => {
       }),
     /EXPOSE_RESET_CODE/,
   );
+});
+
+test('config: TRUST_PROXY aceita número de proxies ou lista de endereços, nunca true', () => {
+  const memory = { DB_PATH: ':memory:' };
+  const trust = (value) => loadConfig({ ...memory, TRUST_PROXY: value }).trustProxy;
+  for (const off of [undefined, '', 'false', 'FALSE', '0', ' 0 ']) assert.equal(trust(off), false);
+  assert.equal(trust('true'), 1);
+  assert.equal(trust('1'), 1);
+  assert.equal(trust('2'), 2);
+  assert.deepEqual(trust('loopback'), ['loopback']);
+  assert.deepEqual(trust('loopback, 10.0.0.0/8 ,192.168.0.1'), [
+    'loopback',
+    '10.0.0.0/8',
+    '192.168.0.1',
+  ]);
+  assert.deepEqual(trust('uniquelocal,::1,fd00::/8'), ['uniquelocal', '::1', 'fd00::/8']);
+  for (const value of ['talvez', '-1', '1.5', '10.0.0.0/33', '10.0.0/8', 'loopback,,qualquer', ',']) {
+    assert.throws(() => trust(value), /TRUST_PROXY/, value);
+  }
 });

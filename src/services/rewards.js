@@ -243,14 +243,18 @@ function useRedemption(user, id, data) {
     fail(403, 'Código do parceiro incorreto.');
   }
 
-  const used = markRedemptionUsed(redemption);
-  notify(
-    user.id,
-    'recompensa',
-    'Cupom utilizado',
-    `O cupom ${redemption.code} foi conferido por ${partner.name}. Bom proveito!`,
-    { target: '/recompensas' },
-  );
+  // Cupom usado e aviso juntos: se um falhar, nada é gravado.
+  const used = db.transaction(() => {
+    const row = markRedemptionUsed(redemption);
+    notify(
+      user.id,
+      'recompensa',
+      'Cupom utilizado',
+      `O cupom ${redemption.code} foi conferido por ${partner.name}. Bom proveito!`,
+      { target: '/recompensas' },
+    );
+    return row;
+  })();
   return redemptionJson(used);
 }
 

@@ -1,7 +1,15 @@
 const { describe, it, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { api, registerUser, startServer, stopServer, resetDatabase } = require('./helpers');
+const {
+  api,
+  registerUser,
+  insertRecord,
+  startServer,
+  stopServer,
+  resetDatabase,
+  db,
+} = require('./helpers');
 
 describe('API — comunidade', () => {
   before(startServer);
@@ -140,6 +148,71 @@ describe('API — comunidade', () => {
     );
     assert.ok(commentNotification);
     assert.match(commentNotification.message, /Visita Souza/);
+  });
+
+  it('comentário e notificação são gravados juntos (transação)', async () => {
+    const author = await registerUser({ email: 'autora@test.app' });
+    const visitor = await registerUser({ email: 'visita@test.app' });
+    const created = await api('/community/posts', {
+      method: 'POST',
+      token: author.token,
+      body: { content: 'Post da autora' },
+    });
+
+    db.exec(`CREATE TEMP TRIGGER falha_notificacao BEFORE INSERT ON notifications
+             BEGIN SELECT RAISE(ABORT, 'falha simulada'); END`);
+    const quiet = console.error;
+    console.error = () => {};
+    try {
+      const comment = await api(`/community/posts/${created.body.post.id}/comments`, {
+        method: 'POST',
+        token: visitor.token,
+        body: { content: 'Muito bom!' },
+      });
+      assert.equal(comment.status, 500);
+    } finally {
+      console.error = quiet;
+      db.exec('DROP TRIGGER IF EXISTS temp.falha_notificacao');
+    }
+    // A notificação falhou: o comentário também não ficou gravado.
+    assert.equal(db.prepare('SELECT COUNT(*) AS total FROM post_comments').get().total, 0);
+  });
+
+  it('ranking: esconde o bairro de quem não aceitou aparecer no mapa (menos o próprio)', async () => {
+    const ana = await registerUser({ email: 'ana@test.app', neighborhood: 'Boa Vista' });
+    const bia = await registerUser({
+      email: 'bia@test.app',
+      name: 'Bia Souza',
+      neighborhood: 'Centro',
+    });
+    db.prepare('UPDATE users SET privacy_location = 0 WHERE id = ?').run(ana.user.id);
+    db.prepare('UPDATE users SET privacy_location = 1 WHERE id = ?').run(bia.user.id);
+    insertRecord({ userId: ana.user.id, points: 30 });
+    insertRecord({ userId: bia.user.id, points: 20 });
+
+    const entryOf = (ranking, isMe) => ranking.find((entry) => entry.isMe === isMe);
+
+    // Ana vê o próprio bairro e o da Bia (que aceitou aparecer).
+    const forAna = (await api('/community/stats', { token: ana.token })).body.ranking;
+    assert.equal(forAna.length, 2);
+    assert.equal(entryOf(forAna, true).neighborhood, 'Boa Vista');
+    assert.equal(entryOf(forAna, false).neighborhood, 'Centro');
+
+    // Bia não vê o bairro da Ana, que desligou "aparecer no mapa".
+    const forBia = (await api('/community/stats', { token: bia.token })).body.ranking;
+    assert.equal(entryOf(forBia, true).neighborhood, 'Centro');
+    assert.equal(entryOf(forBia, false).neighborhood, null);
+    assert.equal(entryOf(forBia, false).points, 30);
+  });
+
+  it('busca de bairros é pública (o cadastro usa antes do login); o resto do bairro não', async () => {
+    const found = await api('/places/neighborhoods?search=redent');
+    assert.equal(found.status, 200);
+    assert.ok(found.body.neighborhoods.includes('Vila Redentora'));
+
+    assert.equal((await api('/collection-points')).status, 401);
+    assert.equal((await api('/tips/today')).status, 401);
+    assert.equal((await api('/community/stats')).status, 401);
   });
 
   it('apenas o autor pode excluir a publicação', async () => {

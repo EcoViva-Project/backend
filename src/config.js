@@ -1,5 +1,6 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
+const net = require('node:net');
 const path = require('node:path');
 
 const MIN_JWT_SECRET_LENGTH = 32;
@@ -31,6 +32,51 @@ function parseBoolean(value, name) {
   if (normalized === 'true' || normalized === '1') return true;
   if (normalized === 'false' || normalized === '0') return false;
   throw new Error(`Configuração inválida para ${name}: "${value}". Use true ou false.`);
+}
+
+/** Palavras-chave de faixas de endereço que o Express aceita em `trust proxy`. */
+const TRUST_PROXY_KEYWORDS = ['loopback', 'linklocal', 'uniquelocal'];
+
+function isProxyAddress(item) {
+  if (TRUST_PROXY_KEYWORDS.includes(item.toLowerCase())) return true;
+  const [address, prefix, extra] = item.split('/');
+  const version = net.isIP(address);
+  if (version === 0 || extra !== undefined) return false;
+  if (prefix === undefined) return true;
+  if (!/^\d+$/.test(prefix)) return false;
+  return Number(prefix) <= (version === 4 ? 32 : 128);
+}
+
+/**
+ * `TRUST_PROXY`: em quais proxies confiar para descobrir o IP real (`req.ip`).
+ *
+ * Nunca vira `true` do Express (confiar em todos): com isso qualquer cliente
+ * escolheria o próprio IP pelo cabeçalho `X-Forwarded-For` e escaparia do
+ * limitador de tentativas. Aceita:
+ * - vazio, `false` ou `0`: desligado (padrão);
+ * - inteiro positivo: quantos proxies há na frente da API (`true` antigo = 1);
+ * - lista separada por vírgula de IPs, sub-redes ou palavras-chave do Express
+ *   (`loopback`, `linklocal`, `uniquelocal`), como `loopback, 10.0.0.0/8`.
+ */
+function parseTrustProxy(value) {
+  if (value === undefined) return false;
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === '' || normalized === 'false' || normalized === '0') return false;
+  if (normalized === 'true') return 1;
+  if (/^\d+$/.test(normalized)) return Number(normalized);
+
+  const items = String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const invalid = items.filter((item) => !isProxyAddress(item));
+  if (items.length === 0 || invalid.length > 0) {
+    throw new Error(
+      `Configuração inválida para TRUST_PROXY: "${value}". Use false, o número de proxies ` +
+        '(por exemplo 1) ou uma lista de IPs/sub-redes (por exemplo "loopback, 10.0.0.0/8").',
+    );
+  }
+  return items;
 }
 
 /** Custo do bcrypt: 10 por padrão; os testes usam 4 para rodar rápido. */
@@ -132,7 +178,7 @@ function loadConfig(env = process.env) {
     ),
     weeklyPointsCap: parsePositiveInteger(env.WEEKLY_POINTS_CAP, 400, 'WEEKLY_POINTS_CAP'),
     bcryptRounds: parseBcryptRounds(env.BCRYPT_ROUNDS),
-    trustProxy: parseBoolean(env.TRUST_PROXY, 'TRUST_PROXY'),
+    trustProxy: parseTrustProxy(env.TRUST_PROXY),
     corsOrigin: env.CORS_ORIGIN || '*',
   };
 }

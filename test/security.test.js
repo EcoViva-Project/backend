@@ -14,8 +14,12 @@ const {
   advanceClock,
   db,
 } = require('./helpers');
+const bcrypt = require('bcryptjs');
+const app = require('../src/app');
 const config = require('../src/config');
-const { resetRateLimits } = require('../src/middleware/rateLimit');
+const { loadConfig } = require('../src/config');
+const { dummyHash } = require('../src/routes/auth');
+const { rateLimit, createLimiter, resetRateLimits } = require('../src/middleware/rateLimit');
 
 const MAX = config.authRateLimitMax;
 
@@ -81,6 +85,111 @@ describe('API — segurança', () => {
         });
       }
       assert.equal(reset.status, 429);
+    });
+
+    it('register também é limitado (contador próprio)', async () => {
+      let last = null;
+      for (let i = 0; i <= MAX; i += 1) {
+        last = await api('/auth/register', {
+          method: 'POST',
+          body: { name: 'Ana Silva', email: 'ana@test.app', password: 'segredo123' },
+        });
+        if (i === 0) assert.equal(last.status, 201);
+        else if (i < MAX) assert.equal(last.status, 409);
+      }
+      assert.equal(last.status, 429);
+      assert.match(last.body.error, /Muitas tentativas/);
+
+      // O contador do cadastro não gasta as tentativas de login.
+      assert.equal(typeof (await login('ana@test.app', 'segredo123')), 'string');
+    });
+
+    it('TRUST_PROXY=true não deixa o cliente escolher o IP pelo X-Forwarded-For', async () => {
+      await registerUser({ email: 'ana@test.app', password: 'segredo123' });
+      const original = app.get('trust proxy');
+      // Como em produção atrás de um proxy: TRUST_PROXY=true (valor antigo).
+      app.set('trust proxy', loadConfig({ DB_PATH: ':memory:', TRUST_PROXY: 'true' }).trustProxy);
+      try {
+        const statuses = [];
+        for (let i = 0; i <= MAX; i += 1) {
+          // O cliente inventa um IP diferente a cada vez; o proxy acrescenta o real.
+          const response = await api('/auth/login', {
+            method: 'POST',
+            body: { email: 'ana@test.app', password: 'errada' },
+            headers: { 'X-Forwarded-For': `10.0.0.${i}, 203.0.113.9` },
+          });
+          statuses.push(response.status);
+        }
+        assert.equal(statuses.at(-1), 429, statuses.join(','));
+      } finally {
+        app.set('trust proxy', original);
+      }
+    });
+
+    it('limitador: confere o IP antes e guarda só o hash do e-mail', () => {
+      const limiter = rateLimit('teste-memoria');
+      const { byKey, byIp } = limiter.limiters;
+      const fakeRes = () => ({
+        statusCode: 200,
+        set() {},
+        status(code) {
+          this.statusCode = code;
+          return this;
+        },
+        json() {
+          return this;
+        },
+      });
+      const sprayed = (i) => `${i}${'a'.repeat(5000)}@test.app`;
+      let passed = 0;
+      for (let i = 0; i < MAX * 5 + 20; i += 1) {
+        const res = fakeRes();
+        limiter({ ip: '198.51.100.7', body: { email: sprayed(i) } }, res, () => {
+          passed += 1;
+        });
+      }
+      assert.equal(passed, MAX * 5);
+      // Bloqueado pelo IP, nenhum contador novo foi criado para os e-mails.
+      assert.equal(byKey.size, MAX * 5);
+      assert.equal(byIp.size, 1);
+      for (const key of byKey.keys()) {
+        assert.ok(key.length < 200, 'a chave não guarda o texto enviado');
+        assert.match(key, /\|[a-f0-9]{64}$/);
+      }
+    });
+
+    it('limitador: número de chaves tem teto (saem as vencidas, depois as mais antigas)', () => {
+      const realNow = Date.now;
+      let now = 1_000_000;
+      Date.now = () => now;
+      try {
+        const limiter = createLimiter({ max: 3, windowMs: 1000, maxEntries: 3 });
+        limiter.hit('a');
+        now += 600;
+        limiter.hit('b');
+        limiter.hit('c');
+        now += 500; // 'a' venceu; 'b' e 'c' não.
+        limiter.hit('d');
+        assert.deepEqual(limiter.keys(), ['b', 'c', 'd']);
+        limiter.hit('e'); // cheio e nada vencido: sai a mais antiga.
+        assert.deepEqual(limiter.keys(), ['c', 'd', 'e']);
+        assert.equal(limiter.size, 3);
+      } finally {
+        Date.now = realNow;
+      }
+    });
+  });
+
+  describe('login', () => {
+    it('e-mail sem conta compara a senha com o mesmo custo do bcrypt', () => {
+      const original = config.bcryptRounds;
+      try {
+        assert.equal(bcrypt.getRounds(dummyHash()), config.bcryptRounds);
+        config.bcryptRounds = 6;
+        assert.equal(bcrypt.getRounds(dummyHash()), 6);
+      } finally {
+        config.bcryptRounds = original;
+      }
     });
   });
 

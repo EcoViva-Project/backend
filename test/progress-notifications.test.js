@@ -116,6 +116,45 @@ describe('API — progresso, conquistas e notificações', () => {
     assert.equal(unlocked.target, '/conquistas');
   });
 
+  it('conquista e bônus são gravados juntos (transação)', async () => {
+    const { token, user } = await registerUser();
+    insertRecord({ userId: user.id, points: 15, createdAt: daysAgo(0) });
+
+    db.exec(`CREATE TEMP TRIGGER falha_bonus BEFORE INSERT ON action_records
+             WHEN NEW.kind = 'achievement'
+             BEGIN SELECT RAISE(ABORT, 'falha simulada'); END`);
+    const quiet = console.error;
+    console.error = () => {};
+    try {
+      const failed = await api('/progress/achievements', { token });
+      assert.equal(failed.status, 500);
+    } finally {
+      console.error = quiet;
+      db.exec('DROP TRIGGER IF EXISTS temp.falha_bonus');
+    }
+    // O bônus falhou: o selo também não ficou gravado (nem a notificação).
+    const count = (table) =>
+      db.prepare(`SELECT COUNT(*) AS total FROM ${table} WHERE user_id = ?`).get(user.id).total;
+    assert.equal(count('user_achievements'), 0);
+    assert.equal(
+      db
+        .prepare("SELECT COUNT(*) AS total FROM notifications WHERE user_id = ? AND category = 'conquista'")
+        .get(user.id).total,
+      0,
+    );
+
+    // Sem a falha, o selo e o bônus entram juntos.
+    const ok = await api('/progress/achievements', { token });
+    assert.equal(ok.status, 200);
+    assert.equal(count('user_achievements'), 1);
+    assert.equal(
+      db
+        .prepare("SELECT COUNT(*) AS total FROM action_records WHERE user_id = ? AND kind = 'achievement'")
+        .get(user.id).total,
+      1,
+    );
+  });
+
   it('concluir desafio não conta como ação para as conquistas', async () => {
     const { token, user } = await registerUser();
     insertRecord({ userId: user.id, kind: 'challenge', points: 100, liters: 0 });

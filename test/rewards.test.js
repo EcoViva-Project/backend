@@ -12,7 +12,9 @@ const {
   startServer,
   stopServer,
   resetDatabase,
+  db,
 } = require('./helpers');
+const { resetRateLimits } = require('../src/middleware/rateLimit');
 
 function setupReward(overrides = {}) {
   const partner = insertPartner({
@@ -287,6 +289,87 @@ describe('API — recompensas', () => {
     const again = await api(path, { method: 'POST', token: owner.token, body: { pin: '4321' } });
     assert.equal(again.status, 409);
     assert.equal(again.body.error, 'Este cupom já foi utilizado.');
+  });
+
+  async function redeemedCoupon(email = 'dona@test.app') {
+    const owner = await registerUser({ email });
+    const { reward } = setupReward({ pointsCost: 100 });
+    insertRecord({ userId: owner.user.id, points: 500 });
+    const { body } = await api(`/rewards/${reward.id}/redeem`, {
+      method: 'POST',
+      token: owner.token,
+    });
+    return { owner, redemption: body.redemption };
+  }
+
+  it('código do parceiro: 5 tentativas erradas por cupom, depois 429', async () => {
+    const { owner, redemption } = await redeemedCoupon();
+    const path = `/rewards/redemptions/${redemption.id}/use`;
+    const use = (pin) => api(path, { method: 'POST', token: owner.token, body: { pin } });
+
+    for (let i = 0; i < 5; i += 1) {
+      assert.equal((await use(`000${i}`)).status, 403);
+    }
+    // Esgotadas as tentativas, nem o código certo passa até a janela acabar.
+    const blocked = await use('4321');
+    assert.equal(blocked.status, 429);
+    assert.equal(
+      blocked.body.error,
+      'Muitas tentativas erradas do código do parceiro. Aguarde alguns minutos e tente novamente.',
+    );
+    assert.ok(Number(blocked.headers.get('retry-after')) > 0);
+    assert.equal(
+      db.prepare('SELECT used_at FROM redemptions WHERE id = ?').get(redemption.id).used_at,
+      null,
+    );
+
+    // Zerado o limitador (fim da janela), o código certo funciona.
+    resetRateLimits();
+    assert.equal((await use('4321')).status, 200);
+  });
+
+  it('código do parceiro: o limite é por cupom e o código certo não gasta tentativa', async () => {
+    const { owner, redemption } = await redeemedCoupon();
+    const second = await api(`/rewards/${redemption.rewardId}/redeem`, {
+      method: 'POST',
+      token: owner.token,
+    });
+    const use = (id, pin) =>
+      api(`/rewards/redemptions/${id}/use`, { method: 'POST', token: owner.token, body: { pin } });
+
+    for (let i = 0; i < 4; i += 1) assert.equal((await use(redemption.id, '0000')).status, 403);
+    // Dentro da franquia, o código certo funciona na primeira tentativa.
+    assert.equal((await use(redemption.id, '4321')).status, 200);
+
+    // O outro cupom tem as próprias 5 tentativas.
+    for (let i = 0; i < 5; i += 1) {
+      assert.equal((await use(second.body.redemption.id, '0000')).status, 403);
+    }
+    assert.equal((await use(second.body.redemption.id, '4321')).status, 429);
+  });
+
+  it('cupom usado e notificação são gravados juntos (transação)', async () => {
+    const { owner, redemption } = await redeemedCoupon();
+    db.exec(`CREATE TEMP TRIGGER falha_notificacao BEFORE INSERT ON notifications
+             BEGIN SELECT RAISE(ABORT, 'falha simulada'); END`);
+    const quiet = console.error;
+    console.error = () => {};
+    try {
+      const response = await api(`/rewards/redemptions/${redemption.id}/use`, {
+        method: 'POST',
+        token: owner.token,
+        body: { pin: '4321' },
+      });
+      assert.equal(response.status, 500);
+    } finally {
+      console.error = quiet;
+      db.exec('DROP TRIGGER IF EXISTS temp.falha_notificacao');
+    }
+    // A notificação falhou: o cupom continua ativo.
+    assert.equal(
+      db.prepare('SELECT used_at FROM redemptions WHERE id = ?').get(redemption.id).used_at,
+      null,
+    );
   });
 
   it('não permite resgatar recompensa inexistente', async () => {
