@@ -60,25 +60,151 @@ function normalize(value) {
   return out.replace(/\s+/g, ' ');
 }
 
-/** Bairro com esse nome (ignorando acentos e maiúsculas), ou `null`. */
+/**
+ * Área coberta pelo mapa-base do app (São José do Rio Preto), igual à de
+ * `Places.mapArea` no app.
+ */
+const MAP_AREA = { south: -20.93, west: -49.5, north: -20.7, east: -49.28 };
+
+/** Abreviações comuns em nomes de bairro ("Jd." é Jardim, "Vl" é Vila...). */
+const ABBREVIATIONS = {
+  jd: 'jardim',
+  jdm: 'jardim',
+  vl: 'vila',
+  pq: 'parque',
+  pqe: 'parque',
+  res: 'residencial',
+  resid: 'residencial',
+  cj: 'conjunto',
+  conj: 'conjunto',
+  hab: 'habitacional',
+  lot: 'loteamento',
+  cond: 'condominio',
+  sta: 'santa',
+  sto: 'santo',
+  nsa: 'nossa',
+  sra: 'senhora',
+  dr: 'doutor',
+  prof: 'professor',
+};
+
+/** Palavras de ligação, ignoradas na comparação ("Bosque da Saúde"). */
+const CONNECTIVES = new Set(['de', 'da', 'do', 'dos', 'das']);
+
+/** Números romanos que aparecem nos nomes ("Vista Alegre II"). */
+const ROMANS = { i: '1', ii: '2', iii: '3', iv: '4' };
+
+/**
+ * Palavras de um nome para comparação: sem acentos nem pontuação, com as
+ * abreviações por extenso, romanos como números e sem "de/da/do/dos/das".
+ */
+function words(value) {
+  return normalize(value)
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(' ')
+    .filter((word) => word && !CONNECTIVES.has(word))
+    .map((word) => ROMANS[word] ?? ABBREVIATIONS[word] ?? word);
+}
+
+/** Bairros com as palavras de comparação, montados uma vez. */
+const INDEX = NEIGHBORHOODS.map((item) => {
+  const itemWords = words(item.name);
+  return { item, key: itemWords.join(' '), words: itemWords };
+});
+
+/** `a` e `b` diferem por no máximo uma letra (trocada, faltando ou sobrando). */
+function withinOneEdit(a, b) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  if (a.length > b.length) return withinOneEdit(b, a);
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (a.length === b.length) i += 1;
+    j += 1;
+  }
+  return edits + (b.length - j) + (a.length - i) <= 1;
+}
+
+/**
+ * Cada palavra digitada está em `other`, com no máximo uma delas com uma letra
+ * de diferença. Números precisam ser iguais.
+ */
+function closeWords(typed, other) {
+  let typos = 0;
+  for (const word of typed) {
+    if (other.includes(word)) continue;
+    if (word.length < 4 || /[0-9]/.test(word)) return false;
+    const near = other.some((candidate) => candidate.length >= 4 && withinOneEdit(word, candidate));
+    if (!near) return false;
+    typos += 1;
+    if (typos > 1) return false;
+  }
+  return typos === 1;
+}
+
+/**
+ * Bairro com esse nome, ou `null`.
+ *
+ * Na ordem: nome igual (ignorando acentos e maiúsculas); igual depois de trocar
+ * abreviações e ignorar pontuação e "de/da/do"; o único bairro que tem todas
+ * as palavras digitadas; o único que bate com até uma letra trocada, faltando
+ * ou sobrando. Se mais de um bairro serve, nenhum é escolhido. Mesma regra de
+ * `Places.findNeighborhood` no app.
+ */
 function findNeighborhood(name) {
   if (name === null || name === undefined || String(name).trim() === '') return null;
   const wanted = normalize(name);
-  return NEIGHBORHOODS.find((item) => normalize(item.name) === wanted) || null;
+  const exact = NEIGHBORHOODS.find((item) => normalize(item.name) === wanted);
+  if (exact) return exact;
+
+  const typed = words(name);
+  if (typed.length === 0) return null;
+  const key = typed.join(' ');
+  const only = (test) => {
+    let found = null;
+    for (const entry of INDEX) {
+      if (!test(entry)) continue;
+      if (found) return null; // mais de um: ambíguo
+      found = entry.item;
+    }
+    return found;
+  };
+
+  const same = only((entry) => entry.key === key);
+  if (same) return same;
+  // Texto curto demais ("2", "Sul") casaria com qualquer coisa.
+  if (key.replace(/ /g, '').length < 4) return null;
+  const contained = only((entry) => typed.every((word) => entry.words.includes(word)));
+  if (contained) return contained;
+  return only((entry) => closeWords(typed, entry.words));
 }
 
-/** Nomes de bairros que contêm o texto: primeiro os que começam com ele. */
+/**
+ * Nomes de bairros que contêm o texto: primeiro os que começam com ele.
+ * Também acha pelo nome abreviado ("Jd Nazar" sugere Jardim Nazareth).
+ */
 function searchNeighborhoods(query, limit = 12) {
   const wanted = normalize(query);
   if (!wanted) return [];
+  const key = words(query).join(' ');
   const starts = [];
   const contains = [];
-  for (const item of NEIGHBORHOODS) {
-    const name = normalize(item.name);
-    if (name.startsWith(wanted)) starts.push(item.name);
-    else if (name.includes(wanted)) contains.push(item.name);
+  const byKey = [];
+  for (const entry of INDEX) {
+    const name = normalize(entry.item.name);
+    if (name.startsWith(wanted)) starts.push(entry.item.name);
+    else if (name.includes(wanted)) contains.push(entry.item.name);
+    else if (key && entry.key.includes(key)) byKey.push(entry.item.name);
   }
-  return [...starts, ...contains].slice(0, limit);
+  return [...starts, ...contains, ...byKey].slice(0, limit);
 }
 
 /**
@@ -98,18 +224,18 @@ function hashKey(key) {
 
 /**
  * Posição aproximada de um morador do bairro.
- * Bairro desconhecido cai no centro da cidade, com deslocamento maior.
+ * Bairro que não está na lista dá `null`: a pessoa fica sem posição (não
+ * aparece para os vizinhos) em vez de cair, sem aviso, no centro da cidade.
  */
 function approximatePosition(neighborhood, key) {
   const found = findNeighborhood(neighborhood);
-  const base = found ? { lat: found.lat, lon: found.lon } : CITY_CENTER;
-  const spread = found ? JITTER : JITTER * 3;
+  if (!found) return null;
   const hash = hashKey(key);
-  const dLat = ((hash % 2001) / 1000.0 - 1) * spread;
-  const dLon = ((Math.floor(hash / 2001) % 2001) / 1000.0 - 1) * spread;
+  const dLat = ((hash % 2001) / 1000.0 - 1) * JITTER;
+  const dLon = ((Math.floor(hash / 2001) % 2001) / 1000.0 - 1) * JITTER;
   return {
-    lat: Number((base.lat + dLat).toFixed(5)),
-    lon: Number((base.lon + dLon).toFixed(5)),
+    lat: Number((found.lat + dLat).toFixed(5)),
+    lon: Number((found.lon + dLon).toFixed(5)),
   };
 }
 
@@ -129,6 +255,7 @@ module.exports = {
   DEFAULT_CITY,
   DEFAULT_STATE,
   CITY_CENTER,
+  MAP_AREA,
   NEIGHBORHOODS,
   normalize,
   findNeighborhood,

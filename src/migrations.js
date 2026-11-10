@@ -336,7 +336,13 @@ function migrateToV2(db, { now }) {
   );
   for (const user of db.prepare('SELECT id, email, neighborhood FROM users').all()) {
     const position = approximatePosition(user.neighborhood, String(user.email).toLowerCase());
-    setPlace.run(DEFAULT_CITY, DEFAULT_STATE, position.lat, position.lon, user.id);
+    setPlace.run(
+      DEFAULT_CITY,
+      DEFAULT_STATE,
+      position?.lat ?? null,
+      position?.lon ?? null,
+      user.id,
+    );
   }
 
   // Quem já estava em um desafio começa o prazo pessoal agora.

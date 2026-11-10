@@ -100,8 +100,8 @@ function createUser({
       complement,
       city ? city : places.DEFAULT_CITY,
       state ? state : places.DEFAULT_STATE,
-      position.lat,
-      position.lon,
+      position?.lat ?? null,
+      position?.lon ?? null,
       initialsFor(name),
       iso(createdAt ?? clock.now()),
     );
@@ -132,8 +132,8 @@ function updateProfile(user, data) {
     values.neighborhood = neighborhood;
     // A posição aproximada acompanha o bairro.
     const position = places.approximatePosition(neighborhood, String(user.email));
-    values.lat = position.lat;
-    values.lon = position.lon;
+    values.lat = position?.lat ?? null;
+    values.lon = position?.lon ?? null;
   }
   const address = addressFrom(data);
   for (const key of ADDRESS_COLUMNS) {
