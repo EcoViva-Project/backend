@@ -6,7 +6,7 @@ const config = require('../config');
 const clock = require('../services/clock');
 const { sha256 } = require('../migrations');
 const { signToken, authRequired } = require('../middleware/auth');
-const { rateLimit } = require('../middleware/rateLimit');
+const { rateLimit, createLimiter } = require('../middleware/rateLimit');
 const { fail, bodyOf } = require('../services/errors');
 const { notify } = require('../services/notifications');
 const { iso, int, clean } = require('../services/util');
@@ -29,6 +29,21 @@ const router = express.Router();
 
 /** Tentativas erradas que invalidam um código de recuperação. */
 const MAX_RESET_ATTEMPTS = 5;
+
+/** Códigos novos por conta, numa janela de 1 hora. */
+const RESET_CODES_PER_ACCOUNT = 3;
+const RESET_CODES_WINDOW_MS = 60 * 60 * 1000;
+/** Códigos errados por conta (somando todos os códigos), numa janela de 24 horas. */
+const RESET_WRONG_PER_ACCOUNT = 10;
+const RESET_WRONG_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// Limites por CONTA, independentes do IP: o limitador por IP + e-mail não
+// segura quem troca de IP, e cada código novo traria mais 5 tentativas.
+// Ficam na memória do processo, como os outros limitadores.
+const accountLimiters = {
+  codes: createLimiter({ max: RESET_CODES_PER_ACCOUNT, windowMs: RESET_CODES_WINDOW_MS }),
+  wrongCodes: createLimiter({ max: RESET_WRONG_PER_ACCOUNT, windowMs: RESET_WRONG_WINDOW_MS }),
+};
 
 const FORGOT_MESSAGE =
   'Se existir uma conta com este e-mail, enviaremos as instruções de recuperação.';
@@ -106,6 +121,12 @@ router.post('/forgot-password', rateLimit('forgot-password'), (req, res) => {
   const response = { message: FORGOT_MESSAGE, expiresInMinutes: config.resetCodeTtlMinutes };
   const user = findUserByEmail(email);
   if (!user) return res.json(response);
+  // Teto de códigos da conta: a resposta é a mesma de um e-mail sem conta, e
+  // o código pendente (se houver) continua valendo.
+  const accountKey = `usuario-${user.id}`;
+  if (accountLimiters.codes.peek(accountKey) > 0 || accountLimiters.codes.hit(accountKey) > 0) {
+    return res.json(response);
+  }
 
   const code = String(crypto.randomInt(100000, 1000000));
   db.transaction(() => {
@@ -146,8 +167,12 @@ router.post('/reset-password', rateLimit('reset-password'), (req, res) => {
   const expired =
     !reset || new Date(reset.expires_at).getTime() < clock.now().getTime();
   if (!user || !reset || expired) fail(400, 'Código inválido ou expirado.');
+  // Teto de erros da conta: nem confere o código, com a mesma resposta.
+  const accountKey = `usuario-${user.id}`;
+  if (accountLimiters.wrongCodes.peek(accountKey) > 0) fail(400, 'Código inválido ou expirado.');
 
   if (!sameHash(reset.code, sha256(code))) {
+    accountLimiters.wrongCodes.hit(accountKey);
     const attempts = int(reset.attempts) + 1;
     db.prepare('UPDATE password_resets SET attempts = ?, used = ? WHERE id = ?').run(
       attempts,
@@ -197,3 +222,6 @@ router.post(
 
 module.exports = router;
 module.exports.dummyHash = dummyHash;
+module.exports.accountLimiters = accountLimiters;
+module.exports.RESET_CODES_PER_ACCOUNT = RESET_CODES_PER_ACCOUNT;
+module.exports.RESET_WRONG_PER_ACCOUNT = RESET_WRONG_PER_ACCOUNT;

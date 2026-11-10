@@ -64,8 +64,9 @@ test('config: com banco em arquivo o segredo gerado fica salvo ao lado do banco'
 
 test('config: lê as variáveis informadas', () => {
   const config = loadConfig({
-    NODE_ENV: 'staging',
+    NODE_ENV: 'development',
     PORT: '4100',
+    HOST: '0.0.0.0',
     JWT_SECRET: 'segredo-de-homologacao-com-32-caracteres',
     JWT_EXPIRES_IN: '1d',
     DB_PATH: './tmp/teste.db',
@@ -79,9 +80,10 @@ test('config: lê as variáveis informadas', () => {
     CORS_ORIGIN: 'http://localhost:8080, https://eco.example.com',
   });
 
-  assert.equal(config.nodeEnv, 'staging');
+  assert.equal(config.nodeEnv, 'development');
   assert.equal(config.isProduction, false);
   assert.equal(config.port, 4100);
+  assert.equal(config.host, '0.0.0.0');
   assert.equal(config.jwtSecret, 'segredo-de-homologacao-com-32-caracteres');
   assert.equal(config.jwtSecretSource, 'env');
   assert.equal(config.jwtExpiresIn, '1d');
@@ -147,6 +149,96 @@ test('config: produção recusa EXPOSE_RESET_CODE=true', () => {
       }),
     /EXPOSE_RESET_CODE/,
   );
+});
+
+test('config: NODE_ENV é lido sem diferenciar maiúsculas e espaços; prod vale como produção', () => {
+  const strong = 'c'.repeat(MIN_JWT_SECRET_LENGTH);
+  for (const value of ['production', 'Production', 'PRODUCTION', ' production ', 'prod', 'Prod']) {
+    const config = loadConfig({ NODE_ENV: value, JWT_SECRET: strong });
+    assert.equal(config.nodeEnv, 'production', value);
+    assert.equal(config.isProduction, true, value);
+    assert.throws(() => loadConfig({ NODE_ENV: value }), /JWT_SECRET/, value);
+    assert.throws(
+      () => loadConfig({ NODE_ENV: value, JWT_SECRET: strong, EXPOSE_RESET_CODE: 'true' }),
+      /EXPOSE_RESET_CODE/,
+      value,
+    );
+  }
+  assert.equal(loadConfig({ DB_PATH: ':memory:', NODE_ENV: ' Development ' }).nodeEnv, 'development');
+  assert.equal(loadConfig({ DB_PATH: ':memory:', NODE_ENV: 'TEST' }).nodeEnv, 'test');
+});
+
+test('config: EXPOSE_RESET_CODE=true só com NODE_ENV development ou test escrito', () => {
+  const memory = { DB_PATH: ':memory:', EXPOSE_RESET_CODE: 'true' };
+  for (const value of ['development', 'Development', 'test', ' TEST ']) {
+    assert.equal(loadConfig({ ...memory, NODE_ENV: value }).exposeResetCode, true, value);
+  }
+  // Vazio (o padrão de um `npm start` sem .env), homologação ou qualquer outro
+  // nome: o código de recuperação nunca sai na resposta.
+  for (const value of [undefined, '', '  ', 'staging', 'homologacao', 'dev', 'qa']) {
+    assert.throws(
+      () => loadConfig({ ...memory, NODE_ENV: value }),
+      /EXPOSE_RESET_CODE/,
+      String(value),
+    );
+  }
+  // Desligado, qualquer ambiente sobe.
+  assert.equal(loadConfig({ DB_PATH: ':memory:', NODE_ENV: 'staging' }).exposeResetCode, false);
+});
+
+test('config: segredos de exemplo são recusados em todo ambiente, menos em test', () => {
+  const memory = { DB_PATH: ':memory:' };
+  const placeholders = [
+    ...KNOWN_EXAMPLE_SECRETS,
+    'Change-Me-To-A-Long-Random-String',
+    ' eco-dev-secret-change-me ',
+    'changeme',
+    'change-me',
+    'secret',
+    'your-secret-here',
+    'troque-este-segredo-por-um-valor-aleatorio-longo',
+  ];
+  for (const env of [undefined, '', 'development', 'staging', 'production', 'Prod']) {
+    for (const secret of placeholders) {
+      assert.throws(
+        () => loadConfig({ ...memory, NODE_ENV: env, JWT_SECRET: secret }),
+        /JWT_SECRET/,
+        `${env} / ${secret}`,
+      );
+    }
+  }
+  // Os testes automáticos usam um segredo conhecido de propósito.
+  assert.equal(
+    loadConfig({ ...memory, NODE_ENV: 'test', JWT_SECRET: 'eco-test-secret' }).jwtSecret,
+    'eco-test-secret',
+  );
+});
+
+test('config: segredo curto só vale com NODE_ENV development ou test escrito', () => {
+  const memory = { DB_PATH: ':memory:', JWT_SECRET: 'curto-mas-proprio' };
+  assert.equal(loadConfig({ ...memory, NODE_ENV: 'development' }).jwtSecret, 'curto-mas-proprio');
+  assert.equal(loadConfig({ ...memory, NODE_ENV: 'test' }).jwtSecret, 'curto-mas-proprio');
+  for (const env of [undefined, '', 'staging', 'production']) {
+    assert.throws(() => loadConfig({ ...memory, NODE_ENV: env }), /JWT_SECRET/, String(env));
+  }
+});
+
+test('config: HOST é 127.0.0.1 por padrão e aceita só um endereço IP', () => {
+  const memory = { DB_PATH: ':memory:' };
+  assert.equal(loadConfig(memory).host, '127.0.0.1');
+  assert.equal(loadConfig({ ...memory, HOST: '' }).host, '127.0.0.1');
+  assert.equal(loadConfig({ ...memory, HOST: ' 0.0.0.0 ' }).host, '0.0.0.0');
+  assert.equal(loadConfig({ ...memory, HOST: '::' }).host, '::');
+  assert.equal(loadConfig({ ...memory, HOST: '192.168.0.10' }).host, '192.168.0.10');
+  assert.equal(loadConfig({ ...memory, HOST: 'localhost' }).host, 'localhost');
+  for (const value of ['qualquer', '999.1.1.1', '0.0.0.0:3100']) {
+    assert.throws(() => loadConfig({ ...memory, HOST: value }), /HOST/, value);
+  }
+});
+
+test('config: o .env.example traz HOST=127.0.0.1', () => {
+  const example = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
+  assert.match(example, /^HOST=127\.0\.0\.1$/m);
 });
 
 test('config: TRUST_PROXY aceita número de proxies ou lista de endereços, nunca true', () => {

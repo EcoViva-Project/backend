@@ -2,10 +2,12 @@ const express = require('express');
 const { authRequired } = require('../middleware/auth');
 const { bodyOf } = require('../services/errors');
 const community = require('../services/community');
+const { canonicalId } = require('../services/util');
 
 const router = express.Router();
 
 router.use(authRequired);
+router.param('id', canonicalId);
 
 router.get('/stats', (req, res) => {
   return res.json(community.communityStats(req.user));
@@ -29,7 +31,7 @@ router.post('/posts/:id/like', (req, res) => {
 
 router.get('/posts/:id/comments', (req, res) => {
   const post = community.requirePost(req.params.id);
-  return res.json({ comments: community.commentsOf(post.id) });
+  return res.json({ comments: community.commentsOf(post.id, req.user) });
 });
 
 router.post('/posts/:id/comments', (req, res) => {

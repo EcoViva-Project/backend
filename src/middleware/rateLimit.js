@@ -10,9 +10,11 @@
 // A memória usada tem teto: cada contador guarda só chaves curtas (o e-mail
 // entra como hash SHA-256, nunca o texto enviado) e o número de chaves é
 // limitado (`MAX_ENTRIES`); cheio, saem primeiro as vencidas e depois as mais
-// antigas.
+// antigas que não estão bloqueadas (cheio só de bloqueios, chave nova espera).
+// IPv6 conta pela rede /64.
 
 const crypto = require('node:crypto');
+const net = require('node:net');
 const config = require('../config');
 
 const limiters = new Set();
@@ -34,17 +36,43 @@ function createLimiter({ max, windowMs, maxEntries = MAX_ENTRIES }) {
     return entry || null;
   }
 
-  /** Abre espaço para uma chave nova: tira as vencidas e, se preciso, as mais antigas. */
+  function blocked(entry) {
+    return entry.count >= max;
+  }
+
+  /**
+   * Abre espaço para uma chave nova: tira as vencidas e, se preciso, as mais
+   * antigas que não estão bloqueadas. Um bloqueio nunca sai antes de vencer
+   * (senão quem inunda o limitador com chaves novas zeraria os próprios
+   * bloqueios). Devolve `false` se não deu para abrir espaço.
+   */
   function makeRoom(now) {
-    if (hits.size < maxEntries) return;
+    if (hits.size < maxEntries) return true;
     for (const [key, entry] of hits) {
       if (entry.resetAt <= now) hits.delete(key);
     }
     // O Map guarda a ordem de inserção: as primeiras chaves são as mais antigas.
-    for (const key of hits.keys()) {
+    for (const [key, entry] of hits) {
       if (hits.size < maxEntries) break;
-      hits.delete(key);
+      if (!blocked(entry)) hits.delete(key);
     }
+    return hits.size < maxEntries;
+  }
+
+  /** Cheio só de bloqueios ainda válidos: nenhuma chave nova cabe. */
+  function saturated(now) {
+    if (hits.size < maxEntries) return false;
+    for (const entry of hits.values()) {
+      if (entry.resetAt <= now || !blocked(entry)) return false;
+    }
+    return true;
+  }
+
+  /** Espera até o primeiro bloqueio vencer (para chaves novas com o limitador cheio). */
+  function saturatedWait(now) {
+    let first = Infinity;
+    for (const entry of hits.values()) first = Math.min(first, entry.resetAt);
+    return waitOf({ resetAt: first }, now);
   }
 
   function waitOf(entry, now) {
@@ -57,7 +85,8 @@ function createLimiter({ max, windowMs, maxEntries = MAX_ENTRIES }) {
       const now = Date.now();
       let entry = current(key, now);
       if (!entry) {
-        makeRoom(now);
+        // Cheio de bloqueios: a chave nova espera, sem apagar nenhum bloqueio.
+        if (!makeRoom(now)) return saturatedWait(now);
         entry = { count: 0, resetAt: now + windowMs };
         hits.set(key, entry);
       }
@@ -68,7 +97,8 @@ function createLimiter({ max, windowMs, maxEntries = MAX_ENTRIES }) {
     peek(key) {
       const now = Date.now();
       const entry = current(key, now);
-      return entry && entry.count >= max ? waitOf(entry, now) : 0;
+      if (!entry) return saturated(now) ? saturatedWait(now) : 0;
+      return blocked(entry) ? waitOf(entry, now) : 0;
     },
     get size() {
       return hits.size;
@@ -86,6 +116,39 @@ function createLimiter({ max, windowMs, maxEntries = MAX_ENTRIES }) {
 
 function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex');
+}
+
+/** Os 8 grupos de 16 bits de um endereço IPv6 (com `::` expandido). */
+function ipv6Groups(address) {
+  let text = address.split('%')[0].toLowerCase();
+  const v4 = text.match(/(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (v4) {
+    const [a, b, c, d] = v4.slice(1).map(Number);
+    text = `${text.slice(0, -v4[0].length)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const [head, tail] = text.split('::');
+  const first = head ? head.split(':') : [];
+  if (tail === undefined) return first.map((group) => Number.parseInt(group, 16));
+  const last = tail ? tail.split(':') : [];
+  const zeros = Array(8 - first.length - last.length).fill('0');
+  return [...first, ...zeros, ...last].map((group) => Number.parseInt(group, 16));
+}
+
+/**
+ * Chave do IP para o limitador. Um endereço IPv6 conta pela rede /64 (quem
+ * tem uma /64 dispõe de 2^64 endereços e ganharia contadores sem fim); IPv4
+ * escrito como IPv6 (`::ffff:1.2.3.4`) conta como o IPv4.
+ */
+function ipKey(ip) {
+  const address = String(ip);
+  if (!net.isIPv6(address.split('%')[0])) return address;
+  const mapped = address.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (mapped) return mapped[1];
+  const network = ipv6Groups(address)
+    .slice(0, 4)
+    .map((group) => group.toString(16))
+    .join(':');
+  return `${network}::/64`;
 }
 
 /**
@@ -107,7 +170,7 @@ function rateLimit(name, keyOf = (req) => req.body?.email) {
   }
 
   const middleware = (req, res, next) => {
-    const ip = req.ip || req.socket?.remoteAddress || 'desconhecido';
+    const ip = ipKey(req.ip || req.socket?.remoteAddress || 'desconhecido');
     const waitIp = byIp.hit(`${name}|${ip}`);
     if (waitIp > 0) return tooMany(res, waitIp);
 
@@ -125,4 +188,4 @@ function resetRateLimits() {
   for (const limiter of limiters) limiter.reset();
 }
 
-module.exports = { rateLimit, createLimiter, resetRateLimits, TOO_MANY, MAX_ENTRIES };
+module.exports = { rateLimit, createLimiter, resetRateLimits, ipKey, TOO_MANY, MAX_ENTRIES };

@@ -3,10 +3,12 @@ const db = require('../db');
 const { authRequired } = require('../middleware/auth');
 const { fail, bodyOf } = require('../services/errors');
 const { listNotifications } = require('../services/notifications');
+const { canonicalId } = require('../services/util');
 
 const router = express.Router();
 
 router.use(authRequired);
+router.param('id', canonicalId);
 
 router.get('/', (req, res) => {
   return res.json(listNotifications(req.user.id));

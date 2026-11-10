@@ -140,6 +140,8 @@ function recordJson(row) {
     liters: row.liters,
     quantity: row.quantity,
     notes: row.notes,
+    // O servidor ainda não guarda foto de comprovação (só o modo local do app).
+    photo: null,
     dateTime: row.created_at,
   };
 }

@@ -9,6 +9,8 @@ const {
   insertPartner,
   insertReward,
   insertRecord,
+  insertAction,
+  insertChallenge,
   startServer,
   stopServer,
   resetDatabase,
@@ -346,6 +348,75 @@ describe('API — recompensas', () => {
       assert.equal((await use(second.body.redemption.id, '0000')).status, 403);
     }
     assert.equal((await use(second.body.redemption.id, '4321')).status, 429);
+  });
+
+  it('código do parceiro: escrever o id de outro jeito (03, 3.0, +3) não dá tentativas novas', async () => {
+    const { owner, redemption } = await redeemedCoupon();
+    const id = redemption.id;
+    const use = (path, pin) =>
+      api(`/rewards/redemptions/${path}/use`, { method: 'POST', token: owner.token, body: { pin } });
+
+    for (let i = 0; i < 5; i += 1) assert.equal((await use(id, '0000')).status, 403);
+    assert.equal((await use(id, '0000')).status, 429);
+
+    // Outras grafias do mesmo número: a mesma resposta de um cupom inexistente,
+    // sem conferir o código (nem o certo) e sem contador próprio.
+    for (const other of [`0${id}`, `00${id}`, `${id}.0`, `+${id}`, `${id}e0`, ` ${id}`]) {
+      const response = await use(encodeURIComponent(other), '4321');
+      assert.equal(response.status, 404, other);
+      assert.equal(response.body.error, 'Cupom não encontrado.', other);
+    }
+    assert.equal(
+      db.prepare('SELECT used_at FROM redemptions WHERE id = ?').get(id).used_at,
+      null,
+    );
+  });
+
+  it('ids fora da forma canônica respondem como id inexistente em todas as rotas', async () => {
+    const { token, user } = await registerUser();
+    const { reward } = setupReward({ pointsCost: 100 });
+    const notification = db
+      .prepare('SELECT id FROM notifications WHERE user_id = ? ORDER BY id LIMIT 1')
+      .get(user.id);
+    const post = await api('/community/posts', {
+      method: 'POST',
+      token,
+      body: { content: 'Publicação de teste' },
+    });
+    const actionId = insertAction().id;
+    const challengeId = insertChallenge().id;
+
+    const weird = (id) => [`0${id}`, `${id}.0`, `+${id}`, '0', '-1', '99999999999999999999'];
+    const cases = [
+      ['GET', (id) => `/rewards/${id}`, reward.id, 'Recompensa não encontrada.'],
+      ['POST', (id) => `/rewards/${id}/redeem`, reward.id, 'Recompensa não encontrada.'],
+      ['GET', (id) => `/community/posts/${id}/comments`, post.body.post.id, 'Publicação não encontrada.'],
+      ['POST', (id) => `/community/posts/${id}/like`, post.body.post.id, 'Publicação não encontrada.'],
+      ['DELETE', (id) => `/community/posts/${id}`, post.body.post.id, 'Publicação não encontrada.'],
+      ['PATCH', (id) => `/notifications/${id}/read`, notification.id, 'Notificação não encontrada.'],
+      ['GET', (id) => `/actions/${id}`, actionId, 'Ação não encontrada.'],
+      ['POST', (id) => `/actions/${id}/records`, actionId, 'Ação não encontrada.'],
+      ['GET', (id) => `/challenges/${id}`, challengeId, 'Desafio não encontrado.'],
+      ['POST', (id) => `/challenges/${id}/join`, challengeId, 'Desafio não encontrado.'],
+    ];
+    for (const [method, url, id, message] of cases) {
+      for (const form of weird(id)) {
+        const body = method === 'GET' ? undefined : {};
+        const response = await api(url(encodeURIComponent(form)), { method, token, body });
+        assert.equal(response.status, 404, `${method} ${url(form)}`);
+        assert.equal(response.body.error, message, `${method} ${url(form)}`);
+      }
+    }
+
+    // DELETE de notificação responde 200 para id inexistente; com outra grafia
+    // também, mas sem apagar a notificação de verdade.
+    const deleted = await api(`/notifications/0${notification.id}`, { method: 'DELETE', token });
+    assert.equal(deleted.status, 200);
+    assert.ok(db.prepare('SELECT id FROM notifications WHERE id = ?').get(notification.id));
+
+    // A forma canônica continua funcionando.
+    assert.equal((await api(`/rewards/${reward.id}`, { token })).status, 200);
+    assert.equal((await api(`/community/posts/${post.body.post.id}/comments`, { token })).status, 200);
   });
 
   it('cupom usado e notificação são gravados juntos (transação)', async () => {

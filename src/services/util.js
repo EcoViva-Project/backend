@@ -15,6 +15,46 @@ function int(value, fallback = 0) {
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
+/**
+ * Id da URL como inteiro positivo, só na forma canônica (`3`, nunca `03`,
+ * `3.0`, `+3` ou ` 3`); qualquer outra forma vira `null`, e a busca no banco
+ * responde como id inexistente. Sem isso, o SQLite converte essas grafias para
+ * o mesmo registro e cada uma ganharia um contador próprio no limitador.
+ */
+function parseId(value) {
+  const text = String(value ?? '');
+  if (!/^[1-9]\d*$/.test(text)) return null;
+  const id = Number(text);
+  return Number.isSafeInteger(id) ? id : null;
+}
+
+/**
+ * Para `router.param('id', canonicalId)`: troca `req.params.id` pelo número
+ * (ou `null`) uma vez, antes de qualquer rota com `:id`.
+ */
+function canonicalId(req, res, next, value) {
+  req.params.id = parseId(value);
+  next();
+}
+
+/** Como os outros veem quem desligou "Perfil visível para a comunidade". */
+const ANONYMOUS_NAME = 'Alguém do bairro';
+const ANONYMOUS_INITIALS = '•';
+
+/**
+ * Nome e iniciais de `person` (linha de `users` com `id` e `privacy_profile`)
+ * vistos por `viewerId`. Quem desligou o perfil visível aparece para os OUTROS
+ * como "Alguém do bairro" e "•"; a própria pessoa sempre se vê com o nome real.
+ * Com a preferência ligada (ou sem pessoa, como publicação de conta apagada),
+ * vale `shown`, o nome e as iniciais que a tela mostraria de qualquer forma.
+ */
+function publicIdentity(person, viewerId, shown) {
+  if (person && person.id !== viewerId && !flag(person.privacy_profile)) {
+    return { name: ANONYMOUS_NAME, initials: ANONYMOUS_INITIALS };
+  }
+  return shown;
+}
+
 /** Coluna 0/1 do SQLite como booleano. */
 function flag(value) {
   return value === 1 || value === true;
@@ -85,6 +125,11 @@ function newestFirst(a, b) {
 module.exports = {
   iso,
   int,
+  parseId,
+  canonicalId,
+  ANONYMOUS_NAME,
+  ANONYMOUS_INITIALS,
+  publicIdentity,
   flag,
   clean,
   parseDate,

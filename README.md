@@ -50,6 +50,12 @@ A porta padrão é **3100** (a 3000 costuma estar ocupada por outros sistemas).
 No app, aponte para ela com
 `--dart-define=ECO_API_URL=http://127.0.0.1:3100/api`.
 
+Por padrão a API escuta só em `127.0.0.1` (este computador). Para um celular na
+mesma rede alcançá-la, defina `HOST=0.0.0.0`: isso **expõe a API a toda a rede**
+(Wi-Fi da escola, da feira...), inclusive a conta de demonstração, que tem senha
+pública. O log da inicialização mostra o endereço real e avisa quando a API está
+aberta para a rede.
+
 ### Conta de demonstração
 
 | Campo | Valor |
@@ -84,12 +90,13 @@ vencido.
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
 | `PORT` | `3100` | Porta HTTP |
-| `NODE_ENV` | `development` | `production` liga as travas de segurança abaixo |
-| `JWT_SECRET` | *(vazio)* | Obrigatório em produção, com ≥ 32 caracteres e diferente dos exemplos do repositório. Vazio fora de produção: a API gera um segredo aleatório e o guarda em `.jwt-secret` ao lado do banco (com `DB_PATH=:memory:`, um segredo por processo) |
+| `HOST` | `127.0.0.1` | Endereço em que a API escuta. `0.0.0.0` (ou `::`) abre a API para a rede: qualquer aparelho conectado a ela pode chamá-la |
+| `NODE_ENV` | `development` | Lido sem diferenciar maiúsculas; `prod` vale como `production`. Veja as regras abaixo |
+| `JWT_SECRET` | *(vazio)* | Obrigatório em produção. Segredos de exemplo (os do repositório e textos como `change-me`) são recusados em qualquer ambiente, menos `test`. Menos de 32 caracteres só com `NODE_ENV` `development` ou `test`. Vazio fora de produção: a API gera um segredo aleatório e o guarda em `.jwt-secret` ao lado do banco (com `DB_PATH=:memory:`, um segredo por processo) |
 | `JWT_EXPIRES_IN` | `7d` | Validade do token |
 | `BCRYPT_ROUNDS` | `10` | Custo do bcrypt (4 a 15) |
 | `RESET_CODE_TTL_MINUTES` | `30` | Validade do código de recuperação |
-| `EXPOSE_RESET_CODE` | `false` | `true` devolve o código de recuperação na resposta (`devCode`), para testes e demonstração. **Proibido em produção** |
+| `EXPOSE_RESET_CODE` | `false` | `true` devolve o código de recuperação na resposta (`devCode`), para testes e demonstração. **Só é aceito com `NODE_ENV` escrito como `development` ou `test`**; com qualquer outro valor (inclusive vazio) a API não sobe |
 | `AUTH_RATE_LIMIT_MAX` | `10` | Tentativas por IP + e-mail na janela (por IP: 5 vezes isso) em `register`, `login`, `forgot-password`, `reset-password` e `change-password` |
 | `AUTH_RATE_LIMIT_WINDOW_MINUTES` | `15` | Janela do limitador |
 | `WEEKLY_POINTS_CAP` | `400` | Teto semanal de pontos de ações |
@@ -98,6 +105,22 @@ vencido.
 | `CORS_ORIGIN` | `*` | Origens permitidas, separadas por vírgula |
 
 Valores inválidos interrompem a inicialização (`src/config.js`).
+
+**Ambientes.** As opções perigosas são liberadas só para quem pede
+desenvolvimento ou teste, em vez de bloqueadas só em produção: um `NODE_ENV`
+escrito de outro jeito (`homologacao`, `staging`) ou vazio nunca libera nada.
+
+| `NODE_ENV` | `JWT_SECRET` vazio | Segredo de exemplo | Segredo com menos de 32 caracteres | `EXPOSE_RESET_CODE=true` |
+| --- | --- | --- | --- | --- |
+| `development` | gera um aleatório | recusado | aceito | aceito |
+| `test` | gera um aleatório | aceito | aceito | aceito |
+| vazio (padrão) ou outro nome | gera um aleatório | recusado | recusado | recusado |
+| `production` ou `prod` | recusado | recusado | recusado | recusado |
+
+Um `npm start` sem `.env` continua funcionando para desenvolvimento (segredo
+aleatório guardado em `data/.jwt-secret`). Um `.env` antigo com
+`JWT_SECRET=change-me-to-a-long-random-string` faz a API recusar a subida:
+apague o valor ou gere um segredo próprio.
 
 ---
 
@@ -133,14 +156,26 @@ dois repositórios. Código: `src/services/economy.js` (espelho de `economy.dart
   deslocamento fixo de algumas centenas de metros (mesmo cálculo do app); o
   endereço completo e o e-mail nunca saem nas rotas de comunidade; quem desliga
   `privacyLocation` some do mapa dos outros e aparece no ranking sem o bairro
-  (`neighborhood: null`; a própria pessoa continua vendo o seu).
+  (`neighborhood: null`; a própria pessoa continua vendo o seu). Quem desliga
+  `privacyProfile` ("Perfil visível para a comunidade") aparece para os outros
+  como **"Alguém do bairro"**, com as iniciais `•`, nas publicações, nos
+  comentários, no texto dos avisos que vão para outras pessoas (como "Alguém do
+  bairro comentou na sua publicação."), no ranking da semana e nos vizinhos do
+  mapa. Não some de nenhum lugar, e pontos e posição não mudam; a própria pessoa
+  sempre se vê com o nome real. A regra vale na hora da leitura, pela preferência
+  atual do autor (o autor é buscado pelo id, não pela cópia do nome gravada na
+  publicação): ligar de novo traz o nome de volta. Os avisos já gravados ficam com
+  o texto do momento em que foram criados. Regra em `publicIdentity`
+  (`src/services/util.js`).
 
 ---
 
 ## 🔌 Endpoints
 
 Todas as rotas ficam sob `/api` e respondem JSON; erros vêm como
-`{ "error": "..." }`. Exceto `health`, `register`, `login`, `forgot-password`,
+`{ "error": "..." }`. Ids na URL (`:id`) só valem na forma canônica, um inteiro
+positivo sem zeros à esquerda (`3`); `03`, `3.0` ou `+3` respondem como id
+inexistente. Exceto `health`, `register`, `login`, `forgot-password`,
 `reset-password` e `places/neighborhoods`, todas exigem
 `Authorization: Bearer <token>`.
 
@@ -151,8 +186,8 @@ Todas as rotas ficam sob `/api` e respondem JSON; erros vêm como
 | `POST` | `/register` | `name`, `email`, `password` e, opcionais, `cep`, `street`, `number`, `complement`, `neighborhood`, `city`, `state` (limitado) |
 | `POST` | `/login` | `{ token, user }` (limitado) |
 | `GET` | `/me` | Usuário autenticado |
-| `POST` | `/forgot-password` | Mesma resposta com e sem conta (limitado) |
-| `POST` | `/reset-password` | `email`, `code`, `password`; invalida as sessões antigas (limitado) |
+| `POST` | `/forgot-password` | Mesma resposta com e sem conta (limitado; no máximo 3 códigos novos por conta por hora) |
+| `POST` | `/reset-password` | `email`, `code`, `password`; invalida as sessões antigas (limitado; no máximo 10 códigos errados por conta em 24 horas) |
 | `POST` | `/change-password` | **Novo.** `currentPassword`, `newPassword`; devolve um token novo e encerra as outras sessões |
 
 O usuário devolvido traz `city`, `address` (só para ele mesmo) e `location`
@@ -172,8 +207,14 @@ O usuário devolvido traz `city`, `address` (só para ele mesmo) e `location`
 | --- | --- | --- |
 | `GET` | `/actions` | Catálogo com `dailyLimit`, `weeklyLimit`, `usedToday`, `usedThisWeek`, `remaining`, `neighborsToday` (`?category=`, `?search=`, `?sort=points\|alphabetical`) |
 | `GET` | `/actions/:id` | Detalhe |
-| `POST` | `/actions/:id/records` | `{ quantity?, notes? }` → `{ record, capReached, challengeUpdates, newAchievements, summary, achievements }`; 409 ao passar do limite da ação |
-| `GET` | `/records` | Histórico (`?limit=` 1–500), com `kind`, `basePoints` e `capped` |
+| `POST` | `/actions/:id/records` | `{ quantity?, notes? }` → `{ record, capReached, challengeUpdates, newAchievements, summary, achievements }`; 409 ao passar do limite da ação; 400 se vier `photo` (veja abaixo) |
+| `GET` | `/records` | Histórico (`?limit=` 1–500), com `kind`, `basePoints`, `capped` e `photo` |
+
+**Foto de comprovação:** o servidor ainda não guarda fotos. Todo registro volta
+com `photo: null`, e um registro enviado com `photo` preenchido é recusado com
+400 e uma mensagem dizendo que, por enquanto, a foto só funciona no modo local
+do app (em vez de a foto ser descartada sem aviso). No modo online o app esconde
+os controles de foto e não manda o campo.
 | `GET` | `/progress` | `summary` + `achievements` |
 | `GET` | `/progress/achievements` | As 10 conquistas |
 
@@ -276,14 +317,23 @@ completa o que falta, numa transação, a partir do catálogo do seed
   (`daily_limit` e `weekly_limit` nulos) recebem os limites do catálogo; os
   pontos passam ao valor novo **só** se ainda forem o padrão antigo daquela ação
   (por exemplo 15 → 5 na torneira); um valor trocado à mão fica como está;
-- parceiros com o nome de um parceiro do catálogo e PIN vazio recebem o PIN do
-  catálogo (`1234`, o de demonstração); outros parceiros com PIN vazio ficam
-  como estão e a API escreve um aviso no log com o nome deles (os cupons deles
-  só podem ser conferidos depois que alguém definir o PIN).
+- recompensas e desafios com o título de um item do catálogo passam às regras
+  novas campo a campo (recompensas: preço, `value_cents`, `validity_days`,
+  `per_user_limit` e termos; desafios: bônus, `duration_days`, `step_mode` e
+  descrição), **só** quando o campo ainda tem o valor antigo daquele item (o do
+  seed do `main` ou o padrão que a migração 2 pôs). Por exemplo, o kit de
+  sacolas vai de 400 para 1.500 pontos e ganha limite de 1 por pessoa, e o
+  transporte ativo passa a contar trajetos (`actions`) em vez de dias. Um valor
+  trocado à mão fica como está;
+- **fora de produção**, parceiros com o nome de um parceiro do catálogo e PIN
+  vazio recebem o PIN de demonstração (`1234`). **Em produção** esse PIN, que é
+  público, não é gravado. Parceiros que continuam com PIN vazio ficam como estão
+  e a API escreve um aviso no log com o nome deles (os cupons deles só podem ser
+  conferidos depois que alguém definir o PIN na tabela `partners`).
 
 Num banco que já tem esses dados (inclusive um recém-criado por `npm run seed`)
-o passo não muda nada. Ele não mexe em desafios, recompensas, usuários nem
-registros.
+o passo não muda nada, e rodar de novo também não. Ele não mexe em usuários nem
+registros, e não cria as recompensas do catálogo que o banco antigo não tinha.
 
 Tabelas: `users`, `password_resets`, `actions`, `action_records`,
 `notifications`, `challenges`, `challenge_progress`, `partners`, `rewards`,
@@ -300,7 +350,15 @@ O que existe:
   `forgot-password`, `reset-password` e `change-password`: por IP + e-mail e
   por IP; passou do limite, 429 com `Retry-After`. O limite por IP é conferido
   primeiro, o e-mail é guardado só como hash e o número de contadores tem teto
-  (10.000 por rota; cheio, saem os vencidos e depois os mais antigos).
+  (10.000 por rota; cheio, saem os vencidos e depois os mais antigos que não
+  estão bloqueados; um bloqueio nunca sai antes de vencer). IPv6 conta pela rede
+  /64.
+- **Recuperação de senha por conta**, independente do IP: no máximo 3 códigos
+  novos por conta a cada hora (passou disso, a resposta é a de sempre e nenhum
+  código novo é criado; o pendente continua valendo) e no máximo 10 códigos
+  errados por conta a cada 24 horas, somando todos os códigos (passou disso,
+  `reset-password` responde "Código inválido ou expirado." sem conferir o
+  código). As respostas continuam iguais para e-mail com e sem conta.
 - **Conferência do cupom:** no máximo 5 códigos de parceiro errados por pessoa
   e cupom a cada 15 minutos (429 depois disso); o código certo não gasta
   tentativa.
@@ -311,9 +369,12 @@ O que existe:
   `forgot-password` é a mesma para e-mail com e sem conta.
 - **Sessões:** o token leva a versão de sessão do usuário (`token_version`);
   redefinir ou trocar a senha invalida todos os tokens antigos.
-- **Segredo JWT:** em produção é obrigatório, longo e diferente dos exemplos do
-  repositório; fora de produção, sem `JWT_SECRET`, é aleatório (nunca um valor
-  fixo e público).
+- **Segredo JWT:** em produção é obrigatório e longo; segredos de exemplo são
+  recusados em todo ambiente, menos `test`; sem `JWT_SECRET` fora de produção,
+  é aleatório (nunca um valor fixo e público).
+- **Rede:** a API escuta só em `127.0.0.1`, a não ser que `HOST` diga outra coisa.
+- **PIN de demonstração** (`1234`): os dados de referência não o gravam em
+  produção.
 - **Validação** de nome, e-mail, senha, bairro, CEP e metas
   (`src/services/validation.js`); JSON malformado → 400 e corpo acima de 1 MB → 413.
 - `npm run seed` recusa rodar em produção sem `--force`.
@@ -331,7 +392,10 @@ O que **não** existe (limitações conhecidas):
   quem resgatou; serve para a demonstração, não como garantia contra fraude. As
   tentativas são limitadas (5 erradas por cupom a cada 15 minutos, na memória
   do processo), o que impede testar todos os códigos de uma vez, mas não
-  substitui um PIN próprio e longo por parceiro.
+  substitui um PIN próprio e longo por parceiro. Em produção, cada parceiro
+  precisa de um PIN definido à mão na tabela `partners`.
+- Os limites por conta da recuperação de senha também ficam na memória do
+  processo (zeram ao reiniciar).
 - `CORS_ORIGIN` padrão é `*`; em produção, liste as origens.
 - SQLite em arquivo único: não indicado para várias instâncias. Sem CI nem
   Dockerfile.

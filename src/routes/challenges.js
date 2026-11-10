@@ -1,6 +1,7 @@
 const express = require('express');
 const { authRequired } = require('../middleware/auth');
 const { fail } = require('../services/errors');
+const { canonicalId } = require('../services/util');
 const {
   findChallenge,
   challengeJson,
@@ -11,6 +12,7 @@ const {
 const router = express.Router();
 
 router.use(authRequired);
+router.param('id', canonicalId);
 
 function requireChallenge(id) {
   const challenge = findChallenge(id);

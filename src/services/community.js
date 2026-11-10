@@ -3,6 +3,9 @@
 // Espelha as seções "Comunidade" e "Bairro" de `eco-app/lib/core/local/local_api.dart`.
 // Nada aqui devolve e-mail nem endereço de outra pessoa: só nome curto,
 // iniciais, bairro e posição aproximada (de quem aceitou aparecer no mapa).
+// Quem desligou "Perfil visível para a comunidade" aparece para os outros como
+// "Alguém do bairro" (`publicIdentity`), conferido na hora da leitura pela
+// preferência atual do autor.
 
 const db = require('../db');
 const clock = require('./clock');
@@ -10,7 +13,15 @@ const economy = require('./economy');
 const places = require('./places');
 const { fail } = require('./errors');
 const { notify } = require('./notifications');
-const { iso, int, flag, clean, relativeTime, shortName } = require('./util');
+const {
+  iso,
+  int,
+  flag,
+  clean,
+  relativeTime,
+  shortName,
+  publicIdentity,
+} = require('./util');
 
 // ---------------------------------------------------------------------------
 // Feed
@@ -26,22 +37,53 @@ function requirePost(id) {
   return post;
 }
 
-function commentJson(row) {
+/** Autores (id, nome, iniciais e preferência de perfil) pelos ids, numa consulta. */
+function peopleById(ids) {
+  const unique = [...new Set(ids.filter((id) => id !== null && id !== undefined))];
+  const people = new Map();
+  if (unique.length === 0) return people;
+  for (const person of db
+    .prepare(
+      `SELECT id, name, initials, privacy_profile FROM users
+       WHERE id IN (${unique.map(() => '?').join(', ')})`,
+    )
+    .all(...unique)) {
+    people.set(person.id, person);
+  }
+  return people;
+}
+
+/**
+ * Nome e iniciais do autor de uma publicação ou comentário, como `viewer` vê:
+ * pelo cadastro atual do autor (a cópia gravada na linha só vale quando a
+ * conta não existe mais).
+ */
+function authorOf(row, people, viewer) {
+  const person = people.get(row.user_id) || null;
+  const shown = person
+    ? { name: person.name, initials: person.initials }
+    : { name: row.author_name, initials: row.author_initials };
+  return publicIdentity(person, viewer.id, shown);
+}
+
+function commentJson(row, people, viewer) {
+  const author = authorOf(row, people, viewer);
   return {
     id: row.id,
-    authorName: row.author_name,
-    authorInitials: row.author_initials,
+    authorName: author.name,
+    authorInitials: author.initials,
     content: row.content,
     timeLabel: relativeTime(row.created_at),
     createdAt: row.created_at,
   };
 }
 
-function commentsOf(postId) {
-  return db
+function commentsOf(postId, viewer) {
+  const rows = db
     .prepare('SELECT * FROM post_comments WHERE post_id = ? ORDER BY created_at ASC, id ASC')
-    .all(postId)
-    .map(commentJson);
+    .all(postId);
+  const people = peopleById(rows.map((row) => row.user_id));
+  return rows.map((row) => commentJson(row, people, viewer));
 }
 
 /**
@@ -63,22 +105,28 @@ function postsJson(rows, user) {
     likes.set(row.post_id, row);
   }
 
-  const comments = new Map(ids.map((id) => [id, []]));
-  for (const row of db
+  const commentRows = db
     .prepare(
       `SELECT * FROM post_comments WHERE post_id IN (${marks})
        ORDER BY created_at ASC, id ASC`,
     )
-    .all(...ids)) {
-    comments.get(row.post_id).push(commentJson(row));
+    .all(...ids);
+  const people = peopleById([
+    ...rows.map((row) => row.user_id),
+    ...commentRows.map((row) => row.user_id),
+  ]);
+  const comments = new Map(ids.map((id) => [id, []]));
+  for (const row of commentRows) {
+    comments.get(row.post_id).push(commentJson(row, people, user));
   }
 
   return rows.map((row) => {
     const like = likes.get(row.id);
+    const author = authorOf(row, people, user);
     return {
       id: row.id,
-      authorName: row.author_name,
-      authorInitials: row.author_initials,
+      authorName: author.name,
+      authorInitials: author.initials,
       content: row.content,
       likes: int(row.base_likes) + (like ? like.total : 0),
       likedByMe: Boolean(like && like.mine),
@@ -140,14 +188,21 @@ function createComment(user, id, data) {
     if (post.user_id !== null && post.user_id !== user.id) {
       const owner = db.prepare('SELECT id FROM users WHERE id = ?').get(post.user_id);
       if (owner) {
-        notify(owner.id, 'comunidade', 'Novo comentário', `${user.name} comentou na sua publicação.`, {
-          target: '/comunidade',
-        });
+        // O aviso vai para outra pessoa: vale a preferência de perfil de quem comentou.
+        const commenter = publicIdentity(user, owner.id, { name: user.name });
+        notify(
+          owner.id,
+          'comunidade',
+          'Novo comentário',
+          `${commenter.name} comentou na sua publicação.`,
+          { target: '/comunidade' },
+        );
       }
     }
     return info.lastInsertRowid;
   })();
-  return commentJson(db.prepare('SELECT * FROM post_comments WHERE id = ?').get(commentId));
+  const row = db.prepare('SELECT * FROM post_comments WHERE id = ?').get(commentId);
+  return commentJson(row, peopleById([row.user_id]), user);
 }
 
 function deletePost(user, id) {
@@ -204,7 +259,7 @@ function communityStats(user) {
   if (top.length > 0) {
     for (const person of db
       .prepare(
-        `SELECT id, name, initials, neighborhood, privacy_location FROM users
+        `SELECT id, name, initials, neighborhood, privacy_location, privacy_profile FROM users
          WHERE id IN (${top.map(() => '?').join(', ')})`,
       )
       .all(...top.map(([id]) => id))) {
@@ -216,10 +271,14 @@ function communityStats(user) {
     const isMe = id === user.id;
     // O bairro de outra pessoa só aparece se ela aceitou aparecer no mapa.
     const showNeighborhood = isMe || flag(person?.privacy_location);
-    return {
-      position: index + 1,
+    const shown = publicIdentity(person || null, user.id, {
       name: isMe ? String(user.name) : shortName(person?.name),
       initials: person?.initials ?? '?',
+    });
+    return {
+      position: index + 1,
+      name: shown.name,
+      initials: shown.initials,
       neighborhood: showNeighborhood ? (person?.neighborhood ?? null) : null,
       points,
       isMe,
@@ -331,15 +390,17 @@ function communityMap(user) {
   const myLon = user.lon ?? null;
   const neighbors = db
     .prepare(
-      `SELECT id, name, initials, neighborhood, lat, lon FROM users
+      `SELECT id, name, initials, neighborhood, lat, lon, privacy_profile FROM users
        WHERE id != ? AND privacy_location = 1 AND lat IS NOT NULL AND lon IS NOT NULL
        ORDER BY id`,
     )
     .all(user.id)
     .map((person) => ({
       id: person.id,
-      name: shortName(person.name),
-      initials: person.initials,
+      ...publicIdentity(person, user.id, {
+        name: shortName(person.name),
+        initials: person.initials,
+      }),
       neighborhood: person.neighborhood,
       lat: person.lat,
       lon: person.lon,

@@ -17,6 +17,6 @@ db.pragma('foreign_keys = ON');
 // controladas por `PRAGMA user_version`. Depois, os dados de referência
 // completam o que um banco de versão antiga deixou vazio (`src/referenceData.js`).
 migrate(db);
-ensureReferenceData(db);
+ensureReferenceData(db, { production: config.isProduction });
 
 module.exports = db;

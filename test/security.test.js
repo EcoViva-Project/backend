@@ -18,7 +18,12 @@ const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 const config = require('../src/config');
 const { loadConfig } = require('../src/config');
-const { dummyHash } = require('../src/routes/auth');
+const {
+  dummyHash,
+  RESET_CODES_PER_ACCOUNT,
+  RESET_WRONG_PER_ACCOUNT,
+  accountLimiters,
+} = require('../src/routes/auth');
 const { rateLimit, createLimiter, resetRateLimits } = require('../src/middleware/rateLimit');
 
 const MAX = config.authRateLimitMax;
@@ -177,6 +182,166 @@ describe('API — segurança', () => {
       } finally {
         Date.now = realNow;
       }
+    });
+
+    it('limitador cheio: contadores bloqueados não saem antes de vencer', () => {
+      const realNow = Date.now;
+      let now = 1_000_000;
+      Date.now = () => now;
+      try {
+        const limiter = createLimiter({ max: 2, windowMs: 1000, maxEntries: 3 });
+        for (let i = 0; i < 3; i += 1) limiter.hit('bloqueada');
+        assert.ok(limiter.peek('bloqueada') > 0);
+        limiter.hit('b');
+        limiter.hit('c');
+        // Cheio: sai a mais antiga que NÃO está bloqueada.
+        assert.equal(limiter.hit('d'), 0);
+        assert.deepEqual(limiter.keys(), ['bloqueada', 'c', 'd']);
+        assert.ok(limiter.peek('bloqueada') > 0);
+
+        // Cheio só de bloqueios: a chave nova espera, em vez de apagar um bloqueio.
+        for (let i = 0; i < 3; i += 1) {
+          limiter.hit('c');
+          limiter.hit('d');
+        }
+        assert.ok(limiter.hit('nova') > 0);
+        assert.deepEqual(limiter.keys(), ['bloqueada', 'c', 'd']);
+
+        // Vencida a janela, tudo volta ao normal.
+        now += 1001;
+        assert.equal(limiter.hit('nova'), 0);
+        assert.equal(limiter.peek('bloqueada'), 0);
+      } finally {
+        Date.now = realNow;
+      }
+    });
+
+    it('limitador por IP: endereços IPv6 da mesma rede /64 contam juntos', () => {
+      const limiter = rateLimit('teste-ipv6');
+      const res = () => ({
+        statusCode: 200,
+        set() {},
+        status(code) {
+          this.statusCode = code;
+          return this;
+        },
+        json() {
+          return this;
+        },
+      });
+      let passed = 0;
+      for (let i = 0; i < MAX * 5 + 10; i += 1) {
+        // Cada requisição de um endereço diferente da mesma /64.
+        limiter(
+          { ip: `2001:db8:abcd:12::${(i + 1).toString(16)}`, body: { email: `p${i}@test.app` } },
+          res(),
+          () => {
+            passed += 1;
+          },
+        );
+      }
+      assert.equal(passed, MAX * 5);
+      assert.deepEqual(limiter.limiters.byIp.keys(), ['teste-ipv6|2001:db8:abcd:12::/64']);
+
+      // Outra /64 tem contador próprio; IPv4 escrito como IPv6 vale como IPv4.
+      let other = 0;
+      limiter({ ip: '2001:db8:abcd:13::1', body: { email: 'x@test.app' } }, res(), () => {
+        other += 1;
+      });
+      limiter({ ip: '::ffff:198.51.100.7', body: { email: 'x@test.app' } }, res(), () => {
+        other += 1;
+      });
+      assert.equal(other, 2);
+      assert.ok(limiter.limiters.byIp.keys().includes('teste-ipv6|198.51.100.7'));
+    });
+  });
+
+  describe('recuperação de senha: limites por conta, independentes do IP', () => {
+    // Como atrás de um proxy: cada requisição chega de um IP diferente.
+    let original;
+    before(() => {
+      original = app.get('trust proxy');
+      app.set('trust proxy', 1);
+    });
+    after(() => app.set('trust proxy', original));
+
+    let ipCounter = 0;
+    const fromNewIp = (path, body) => {
+      ipCounter += 1;
+      return api(path, {
+        method: 'POST',
+        body,
+        headers: { 'X-Forwarded-For': `203.0.113.${ipCounter % 250}, 198.51.100.${ipCounter % 250}` },
+      });
+    };
+    const forgot = (email) => fromNewIp('/auth/forgot-password', { email });
+    const reset = (email, code, password = 'nova1234') =>
+      fromNewIp('/auth/reset-password', { email, code, password });
+
+    it(`no máximo ${RESET_CODES_PER_ACCOUNT} códigos novos por conta na janela; depois a resposta é a de sempre, sem código novo`, async () => {
+      await registerUser({ email: 'ana@test.app', password: 'segredo123' });
+      await registerUser({ email: 'bia@test.app', password: 'segredo123' });
+      const codes = [];
+      for (let i = 0; i < RESET_CODES_PER_ACCOUNT; i += 1) {
+        const response = await forgot('ana@test.app');
+        assert.equal(response.status, 200);
+        codes.push(response.body.devCode);
+      }
+      const rows = () =>
+        db.prepare("SELECT COUNT(*) AS total FROM password_resets r JOIN users u ON u.id = r.user_id WHERE u.email = 'ana@test.app'").get().total;
+      assert.equal(rows(), RESET_CODES_PER_ACCOUNT);
+
+      const capped = await forgot('ana@test.app');
+      const unknown = await forgot('ninguem@test.app');
+      assert.equal(capped.status, 200);
+      // Igual à resposta de um e-mail sem conta: não dá para saber que o teto chegou.
+      assert.deepEqual(capped.body, unknown.body);
+      assert.equal(capped.body.devCode, undefined);
+      assert.equal(rows(), RESET_CODES_PER_ACCOUNT);
+
+      // O último código continua valendo.
+      const ok = await reset('ana@test.app', codes.at(-1));
+      assert.equal(ok.status, 200);
+
+      // Outra conta não é afetada.
+      assert.equal(typeof (await forgot('bia@test.app')).body.devCode, 'string');
+
+      // Fim da janela: volta a gerar códigos.
+      resetRateLimits();
+      assert.equal(typeof (await forgot('ana@test.app')).body.devCode, 'string');
+    });
+
+    it(`no máximo ${RESET_WRONG_PER_ACCOUNT} códigos errados por conta na janela, mesmo pedindo código novo`, async () => {
+      await registerUser({ email: 'ana@test.app', password: 'segredo123' });
+      let wrongs = 0;
+      let code = null;
+      while (wrongs < RESET_WRONG_PER_ACCOUNT) {
+        if (wrongs % 5 === 0) {
+          // Simula o fim da janela dos códigos novos, mas não a dos erros.
+          accountLimiters.codes.reset();
+          code = (await forgot('ana@test.app')).body.devCode;
+        }
+        const wrongCode = code === '123456' ? '654321' : '123456';
+        const wrong = await reset('ana@test.app', wrongCode);
+        assert.equal(wrong.status, 400);
+        wrongs += 1;
+      }
+      accountLimiters.codes.reset();
+      code = (await forgot('ana@test.app')).body.devCode;
+      assert.equal(typeof code, 'string');
+
+      // Teto de erros da conta atingido: nem o código certo passa, com a mesma resposta.
+      const blocked = await reset('ana@test.app', code);
+      assert.equal(blocked.status, 400);
+      assert.equal(blocked.body.error, 'Código inválido ou expirado.');
+      assert.equal((await api('/auth/login', {
+        method: 'POST',
+        body: { email: 'ana@test.app', password: 'segredo123' },
+      })).status, 200);
+
+      // Fim da janela: o código pendente volta a ser conferido.
+      resetRateLimits();
+      assert.equal((await reset('ana@test.app', code)).status, 200);
     });
   });
 

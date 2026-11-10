@@ -1,13 +1,17 @@
 const express = require('express');
 const { authRequired } = require('../middleware/auth');
 const { createLimiter } = require('../middleware/rateLimit');
-const { ApiError, bodyOf } = require('../services/errors');
+const { ApiError, fail, bodyOf } = require('../services/errors');
 const { summary } = require('../services/progress');
 const rewards = require('../services/rewards');
+const { canonicalId } = require('../services/util');
 
 const router = express.Router();
 
 router.use(authRequired);
+// Ids só na forma canônica (`3`): `03`, `3.0` ou `+3` respondem como cupom ou
+// recompensa inexistente e não ganham contador próprio de tentativas do PIN.
+router.param('id', canonicalId);
 
 router.get('/', (req, res) => {
   return res.json({ rewards: rewards.listRewards(req.user, req.query) });
@@ -35,14 +39,16 @@ const pinAttempts = createLimiter({
 
 /** Conferência do cupom no parceiro: `{ "pin": "1234" }`. */
 router.post('/redemptions/:id/use', (req, res) => {
-  const key = `${req.user.id}|${String(req.params.id)}`;
+  const id = req.params.id;
+  if (id === null) fail(404, 'Cupom não encontrado.');
+  const key = `${req.user.id}|${id}`;
   const wait = pinAttempts.peek(key);
   if (wait > 0) {
     res.set('Retry-After', String(wait));
     return res.status(429).json({ error: PIN_TOO_MANY });
   }
   try {
-    return res.json({ redemption: rewards.useRedemption(req.user, req.params.id, bodyOf(req)) });
+    return res.json({ redemption: rewards.useRedemption(req.user, id, bodyOf(req)) });
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) pinAttempts.hit(key);
     throw error;

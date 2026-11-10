@@ -5,17 +5,57 @@ const path = require('node:path');
 
 const MIN_JWT_SECRET_LENGTH = 32;
 const DEFAULT_PORT = 3100;
+const DEFAULT_HOST = '127.0.0.1';
 const JWT_SECRET_FILE = '.jwt-secret';
 
 /**
  * Segredos que já apareceram no repositório (padrão antigo, `.env.example`,
- * testes). São públicos, então nunca valem em produção.
+ * testes). São públicos: só valem com `NODE_ENV=test`.
  */
 const KNOWN_EXAMPLE_SECRETS = [
   'eco-dev-secret-change-me',
   'change-me-to-a-long-random-string',
   'eco-test-secret',
 ];
+
+/** Textos de exemplo comuns, que ninguém deveria usar como segredo de verdade. */
+const PLACEHOLDER_SECRETS = ['secret', 'segredo', 'jwt-secret', 'your-secret-here', 'changeme'];
+const PLACEHOLDER_PATTERN = /change[-_ ]?me|troque|seu[-_ ]segredo|your[-_ ]secret/i;
+
+/** Segredo público ou de exemplo (sem diferenciar maiúsculas e espaços nas pontas). */
+function isExampleSecret(secret) {
+  const normalized = String(secret).trim().toLowerCase();
+  return (
+    KNOWN_EXAMPLE_SECRETS.includes(normalized) ||
+    PLACEHOLDER_SECRETS.includes(normalized) ||
+    PLACEHOLDER_PATTERN.test(normalized)
+  );
+}
+
+/**
+ * `NODE_ENV` sem diferenciar maiúsculas e espaços; `prod` vale como
+ * `production`. Devolve o nome usado pela API e o que veio escrito (vazio
+ * quando a variável não foi definida).
+ */
+function normalizeNodeEnv(value) {
+  const written = String(value ?? '').trim().toLowerCase();
+  const aliases = { prod: 'production' };
+  const name = aliases[written] || written;
+  return { nodeEnv: name || 'development', written: name };
+}
+
+/**
+ * `HOST`: em qual endereço a API escuta. Padrão `127.0.0.1` (só este
+ * computador). `0.0.0.0` ou `::` abrem a API para a rede.
+ */
+function parseHost(value) {
+  const host = String(value ?? '').trim();
+  if (host === '') return DEFAULT_HOST;
+  if (host.toLowerCase() === 'localhost' || net.isIP(host) !== 0) return host;
+  throw new Error(
+    `Configuração inválida para HOST: "${value}". Use um endereço IP, como 127.0.0.1 (padrão) ou 0.0.0.0.`,
+  );
+}
 
 function parsePositiveInteger(value, fallback, name) {
   if (value === undefined || value === '') return fallback;
@@ -127,30 +167,50 @@ function resolveLocalSecret(dbPath) {
   }
 }
 
+/**
+ * Regras de ambiente (`NODE_ENV`, lido sem diferenciar maiúsculas):
+ * - `production` (ou `prod`): `JWT_SECRET` obrigatório;
+ * - opções perigosas só valem se `NODE_ENV` estiver escrito como
+ *   `development` ou `test` (vazio não conta): `EXPOSE_RESET_CODE=true` e
+ *   `JWT_SECRET` com menos de 32 caracteres;
+ * - segredos de exemplo (do repositório ou textos como "change-me") só valem
+ *   com `NODE_ENV=test`, o dos testes automáticos;
+ * - sem `JWT_SECRET` fora de produção, a API gera um segredo aleatório (um
+ *   `npm start` sem `.env` continua funcionando para desenvolvimento).
+ */
 function loadConfig(env = process.env) {
-  const nodeEnv = env.NODE_ENV || 'development';
+  const { nodeEnv, written } = normalizeNodeEnv(env.NODE_ENV);
   const isProduction = nodeEnv === 'production';
+  const isTest = written === 'test';
+  const allowsDevOptions = written === 'development' || isTest;
   const dbPath = env.DB_PATH || path.join(__dirname, '..', 'data', 'eco.db');
   const exposeResetCode = parseBoolean(env.EXPOSE_RESET_CODE, 'EXPOSE_RESET_CODE');
 
   let jwtSecret = env.JWT_SECRET || '';
   let jwtSecretSource = 'env';
 
-  if (isProduction) {
-    if (!jwtSecret) {
-      throw new Error('JWT_SECRET é obrigatório quando NODE_ENV=production.');
-    }
-    if (KNOWN_EXAMPLE_SECRETS.includes(jwtSecret) || jwtSecret.length < MIN_JWT_SECRET_LENGTH) {
-      throw new Error(
-        `JWT_SECRET deve ser um valor próprio (não um dos exemplos do repositório) com ao menos ${MIN_JWT_SECRET_LENGTH} caracteres.`,
-      );
-    }
-    if (exposeResetCode) {
-      throw new Error(
-        'EXPOSE_RESET_CODE=true não é permitido com NODE_ENV=production: o código de recuperação sairia na resposta da API.',
-      );
-    }
-  } else if (!jwtSecret) {
+  if (exposeResetCode && !allowsDevOptions) {
+    throw new Error(
+      `EXPOSE_RESET_CODE=true só é permitido com NODE_ENV=development ou NODE_ENV=test (agora: ${written ? `"${written}"` : 'vazio'}): ` +
+        'o código de recuperação sairia na resposta da API e qualquer pessoa poderia trocar a senha de outra.',
+    );
+  }
+  if (isProduction && !jwtSecret) {
+    throw new Error('JWT_SECRET é obrigatório quando NODE_ENV=production.');
+  }
+  if (jwtSecret && !isTest && isExampleSecret(jwtSecret)) {
+    throw new Error(
+      'JWT_SECRET é um valor de exemplo (público): com ele qualquer pessoa entra em qualquer conta. ' +
+        'Gere um segredo próprio ou deixe a variável vazia fora de produção.',
+    );
+  }
+  if (jwtSecret && !allowsDevOptions && jwtSecret.length < MIN_JWT_SECRET_LENGTH) {
+    throw new Error(
+      `JWT_SECRET deve ter ao menos ${MIN_JWT_SECRET_LENGTH} caracteres ` +
+        '(segredos curtos só valem com NODE_ENV=development ou NODE_ENV=test).',
+    );
+  }
+  if (!jwtSecret) {
     const local = resolveLocalSecret(dbPath);
     jwtSecret = local.secret;
     jwtSecretSource = local.source;
@@ -160,6 +220,7 @@ function loadConfig(env = process.env) {
     nodeEnv,
     isProduction,
     port: parsePositiveInteger(env.PORT, DEFAULT_PORT, 'PORT'),
+    host: parseHost(env.HOST),
     jwtSecret,
     jwtSecretSource,
     jwtExpiresIn: env.JWT_EXPIRES_IN || '7d',
@@ -187,6 +248,7 @@ module.exports = {
   ...loadConfig(),
   loadConfig,
   DEFAULT_PORT,
+  DEFAULT_HOST,
   JWT_SECRET_FILE,
   KNOWN_EXAMPLE_SECRETS,
   MIN_JWT_SECRET_LENGTH,

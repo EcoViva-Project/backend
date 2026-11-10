@@ -108,6 +108,35 @@ describe('API — catálogo de ações e registros', () => {
     );
   });
 
+  it('foto de comprovação: o registro volta com photo null e uma foto enviada é recusada', async () => {
+    const { token } = await registerUser();
+    const [action] = seedActions();
+
+    // Sem foto (ou com o campo vazio): registra e devolve `photo: null`.
+    for (const body of [{}, { photo: null }, { photo: '' }, { photo: '   ' }]) {
+      const created = await post(token, action.id, body);
+      assert.equal(created.status, 201, JSON.stringify(body));
+      assert.equal(created.body.record.photo, null);
+    }
+    const actionRecords = async () =>
+      (await api('/records', { token })).body.records.filter((record) => record.kind === 'action');
+    const listed = (await api('/records', { token })).body.records;
+    assert.equal(listed.filter((record) => record.kind === 'action').length, 4);
+    // Também os bônus (conquista, desafio) vêm com `photo: null`.
+    for (const record of listed) assert.equal(record.photo, null);
+
+    // Com foto: 400 com aviso claro, e nada é gravado.
+    for (const photo of ['foto_1.jpg', '../../etc/passwd', 123, { nome: 'x' }]) {
+      const refused = await post(token, action.id, { photo });
+      assert.equal(refused.status, 400, JSON.stringify(photo));
+      assert.equal(
+        refused.body.error,
+        'A foto de comprovação ainda não é guardada pelo servidor: por enquanto ela só funciona no modo local do app. Registre a ação sem a foto.',
+      );
+    }
+    assert.equal((await actionRecords()).length, 4);
+  });
+
   it('consulta detalhe da ação e devolve 404 para id inexistente', async () => {
     const { token } = await registerUser();
     const [action] = seedActions();
