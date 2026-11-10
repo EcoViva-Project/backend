@@ -1,0 +1,3157 @@
+{
+ "fonte": "OpenStreetMap (Overpass API), © colaboradores do OpenStreetMap, licença ODbL",
+ "consulta": "nós place=suburb|neighbourhood|quarter na área urbana de São José do Rio Preto",
+ "data": "2026-11-09",
+ "bairros": [
+  {
+   "nome": "Areia Branca",
+   "tipo": "neighbourhood",
+   "lat": -20.71022,
+   "lon": -49.39316
+  },
+  {
+   "nome": "Auferville 5",
+   "tipo": "neighbourhood",
+   "lat": -20.74658,
+   "lon": -49.33592
+  },
+  {
+   "nome": "Augusto da Silva",
+   "tipo": "neighbourhood",
+   "lat": -20.75317,
+   "lon": -49.33194
+  },
+  {
+   "nome": "Azulão",
+   "tipo": "neighbourhood",
+   "lat": -20.76652,
+   "lon": -49.37201
+  },
+  {
+   "nome": "Bio City Club Residencial",
+   "tipo": "neighbourhood",
+   "lat": -20.78755,
+   "lon": -49.33226
+  },
+  {
+   "nome": "Boa Vista",
+   "tipo": "suburb",
+   "lat": -20.80244,
+   "lon": -49.38534
+  },
+  {
+   "nome": "Bom Jardim",
+   "tipo": "neighbourhood",
+   "lat": -20.83159,
+   "lon": -49.38259
+  },
+  {
+   "nome": "Bosque da Felicidade",
+   "tipo": "neighbourhood",
+   "lat": -20.775,
+   "lon": -49.35957
+  },
+  {
+   "nome": "Bosque da Saúde",
+   "tipo": "neighbourhood",
+   "lat": -20.82495,
+   "lon": -49.39822
+  },
+  {
+   "nome": "Bosque das Laranjeiras",
+   "tipo": "suburb",
+   "lat": -20.9203,
+   "lon": -49.46327
+  },
+  {
+   "nome": "Bosque das Laranjeiras 2",
+   "tipo": "suburb",
+   "lat": -20.91896,
+   "lon": -49.46714
+  },
+  {
+   "nome": "Brejo Alegre",
+   "tipo": "neighbourhood",
+   "lat": -20.83482,
+   "lon": -49.34091
+  },
+  {
+   "nome": "Cavalari III",
+   "tipo": "neighbourhood",
+   "lat": -20.75896,
+   "lon": -49.35515
+  },
+  {
+   "nome": "Centro",
+   "tipo": "suburb",
+   "lat": -20.81085,
+   "lon": -49.37885
+  },
+  {
+   "nome": "Centro Empresarial BR 153",
+   "tipo": "neighbourhood",
+   "lat": -20.73387,
+   "lon": -49.33205
+  },
+  {
+   "nome": "Centro Industrial Pascutti",
+   "tipo": "neighbourhood",
+   "lat": -20.85713,
+   "lon": -49.33648
+  },
+  {
+   "nome": "Chácara Bela Vista 1ª parte",
+   "tipo": "neighbourhood",
+   "lat": -20.86693,
+   "lon": -49.31958
+  },
+  {
+   "nome": "Chácara Bela Vista 2ª parte",
+   "tipo": "neighbourhood",
+   "lat": -20.87112,
+   "lon": -49.31722
+  },
+  {
+   "nome": "Chácara Municipal",
+   "tipo": "neighbourhood",
+   "lat": -20.83066,
+   "lon": -49.39535
+  },
+  {
+   "nome": "Chácara Santa Rita",
+   "tipo": "neighbourhood",
+   "lat": -20.76112,
+   "lon": -49.33283
+  },
+  {
+   "nome": "Chácaras de Recreio Felicidade",
+   "tipo": "neighbourhood",
+   "lat": -20.74904,
+   "lon": -49.34623
+  },
+  {
+   "nome": "Chácaras de Recreio Nossa Senhora do Líbano",
+   "tipo": "neighbourhood",
+   "lat": -20.74779,
+   "lon": -49.31857
+  },
+  {
+   "nome": "Chácaras de Recreio Terras de São José",
+   "tipo": "neighbourhood",
+   "lat": -20.74151,
+   "lon": -49.31807
+  },
+  {
+   "nome": "Chácaras São Pedro 3",
+   "tipo": "neighbourhood",
+   "lat": -20.74023,
+   "lon": -49.39574
+  },
+  {
+   "nome": "Chácaras Tranquilidade",
+   "tipo": "neighbourhood",
+   "lat": -20.77965,
+   "lon": -49.38494
+  },
+  {
+   "nome": "Cidade Nova",
+   "tipo": "neighbourhood",
+   "lat": -20.83696,
+   "lon": -49.38453
+  },
+  {
+   "nome": "Cohab Bady Bassitt",
+   "tipo": "suburb",
+   "lat": -20.92728,
+   "lon": -49.45806
+  },
+  {
+   "nome": "Cohab Bady Bassitt 1",
+   "tipo": "suburb",
+   "lat": -20.92398,
+   "lon": -49.45598
+  },
+  {
+   "nome": "Cohab Bady Bassitt 2",
+   "tipo": "suburb",
+   "lat": -20.92501,
+   "lon": -49.45319
+  },
+  {
+   "nome": "Cohab Honório Gumercindo de Moraes",
+   "tipo": "suburb",
+   "lat": -20.92246,
+   "lon": -49.45584
+  },
+  {
+   "nome": "Complexo Rios di Itália",
+   "tipo": "neighbourhood",
+   "lat": -20.79616,
+   "lon": -49.33503
+  },
+  {
+   "nome": "Condomínio Empresarial e Industrial Vale dos Cedros",
+   "tipo": "neighbourhood",
+   "lat": -20.89067,
+   "lon": -49.30673
+  },
+  {
+   "nome": "Condomínio Jardim Botânico",
+   "tipo": "neighbourhood",
+   "lat": -20.89427,
+   "lon": -49.43858
+  },
+  {
+   "nome": "Condomínio Jardim das Acácias",
+   "tipo": "neighbourhood",
+   "lat": -20.76696,
+   "lon": -49.37101
+  },
+  {
+   "nome": "Condomínio Las Palmas",
+   "tipo": "neighbourhood",
+   "lat": -20.82855,
+   "lon": -49.40605
+  },
+  {
+   "nome": "Condomínio Paraty",
+   "tipo": "suburb",
+   "lat": -20.91579,
+   "lon": -49.45534
+  },
+  {
+   "nome": "Condomínio Praças Golfe",
+   "tipo": "neighbourhood",
+   "lat": -20.84246,
+   "lon": -49.41903
+  },
+  {
+   "nome": "Condomínio San Fernando Valley",
+   "tipo": "neighbourhood",
+   "lat": -20.88353,
+   "lon": -49.43002
+  },
+  {
+   "nome": "Condomínio Santa Apolônia",
+   "tipo": "suburb",
+   "lat": -20.92233,
+   "lon": -49.35821
+  },
+  {
+   "nome": "Condomínio São Luís - Ipiguá",
+   "tipo": "neighbourhood",
+   "lat": -20.73131,
+   "lon": -49.38348
+  },
+  {
+   "nome": "Condomínio Vitória Régia",
+   "tipo": "neighbourhood",
+   "lat": -20.76667,
+   "lon": -49.37157
+  },
+  {
+   "nome": "Conjunto Habitacional Cristo Rei",
+   "tipo": "neighbourhood",
+   "lat": -20.83597,
+   "lon": -49.34984
+  },
+  {
+   "nome": "Conjunto Habitacional Doutor Newton Flávio da Silva Pinto",
+   "tipo": "neighbourhood",
+   "lat": -20.82858,
+   "lon": -49.49529
+  },
+  {
+   "nome": "Conjunto Habitacional Florindo Rissi",
+   "tipo": "neighbourhood",
+   "lat": -20.8314,
+   "lon": -49.49386
+  },
+  {
+   "nome": "Conjunto Habitacional Guiomar Assad Calil (CAIC)",
+   "tipo": "neighbourhood",
+   "lat": -20.82757,
+   "lon": -49.35339
+  },
+  {
+   "nome": "Conjunto Habitacional Jardim Belo Horizonte",
+   "tipo": "neighbourhood",
+   "lat": -20.79514,
+   "lon": -49.4213
+  },
+  {
+   "nome": "Conjunto Habitacional Newton Flávio Silva Pinto",
+   "tipo": "neighbourhood",
+   "lat": -20.83086,
+   "lon": -49.49171
+  },
+  {
+   "nome": "Conjunto Habitacional S.J.do Rio Preto I",
+   "tipo": "neighbourhood",
+   "lat": -20.76155,
+   "lon": -49.36257
+  },
+  {
+   "nome": "Conjunto Habitacional São José do Rio Preto \"G\"",
+   "tipo": "neighbourhood",
+   "lat": -20.75968,
+   "lon": -49.37892
+  },
+  {
+   "nome": "Conjunto Habitacional São José do Rio Preto \"J\"",
+   "tipo": "neighbourhood",
+   "lat": -20.78435,
+   "lon": -49.43463
+  },
+  {
+   "nome": "Conjunto Habitacional São José do Rio Preto \"O\"",
+   "tipo": "neighbourhood",
+   "lat": -20.70469,
+   "lon": -49.29371
+  },
+  {
+   "nome": "Damha Galleria",
+   "tipo": "neighbourhood",
+   "lat": -20.82355,
+   "lon": -49.34291
+  },
+  {
+   "nome": "Distrito Industrial",
+   "tipo": "suburb",
+   "lat": -20.8155,
+   "lon": -49.42294
+  },
+  {
+   "nome": "Distrito Industrial 2",
+   "tipo": "neighbourhood",
+   "lat": -20.90562,
+   "lon": -49.44102
+  },
+  {
+   "nome": "Distrito Industrial Alto Mirassol",
+   "tipo": "neighbourhood",
+   "lat": -20.79851,
+   "lon": -49.48109
+  },
+  {
+   "nome": "Distrito Industrial Carlos Arnaldo",
+   "tipo": "neighbourhood",
+   "lat": -20.72908,
+   "lon": -49.34239
+  },
+  {
+   "nome": "Distrito Industrial José Domingos",
+   "tipo": "suburb",
+   "lat": -20.92388,
+   "lon": -49.45152
+  },
+  {
+   "nome": "Distrito Industrial Ulysses Guimarães",
+   "tipo": "neighbourhood",
+   "lat": -20.82762,
+   "lon": -49.42313
+  },
+  {
+   "nome": "Ecivitas Amazonas",
+   "tipo": "neighbourhood",
+   "lat": -20.80914,
+   "lon": -49.31698
+  },
+  {
+   "nome": "Ecivitas Lumière 1",
+   "tipo": "neighbourhood",
+   "lat": -20.81533,
+   "lon": -49.32005
+  },
+  {
+   "nome": "Ecivitas Lumière 2",
+   "tipo": "neighbourhood",
+   "lat": -20.80747,
+   "lon": -49.31954
+  },
+  {
+   "nome": "Eco Parque Empresarial Norte",
+   "tipo": "neighbourhood",
+   "lat": -20.72537,
+   "lon": -49.44133
+  },
+  {
+   "nome": "Eldorado",
+   "tipo": "suburb",
+   "lat": -20.78816,
+   "lon": -49.40046
+  },
+  {
+   "nome": "Empresarial Spotti",
+   "tipo": "neighbourhood",
+   "lat": -20.85968,
+   "lon": -49.33297
+  },
+  {
+   "nome": "Eparque Mirage",
+   "tipo": "neighbourhood",
+   "lat": -20.85347,
+   "lon": -49.39854
+  },
+  {
+   "nome": "Eparque Rio Preto Leste",
+   "tipo": "neighbourhood",
+   "lat": -20.76905,
+   "lon": -49.31638
+  },
+  {
+   "nome": "Eplatz Rio Preto",
+   "tipo": "neighbourhood",
+   "lat": -20.88423,
+   "lon": -49.34409
+  },
+  {
+   "nome": "Estância Alvorada",
+   "tipo": "neighbourhood",
+   "lat": -20.75246,
+   "lon": -49.42881
+  },
+  {
+   "nome": "Estância Alvorada II",
+   "tipo": "neighbourhood",
+   "lat": -20.746,
+   "lon": -49.4311
+  },
+  {
+   "nome": "Estância Beira Rio",
+   "tipo": "neighbourhood",
+   "lat": -20.72243,
+   "lon": -49.39512
+  },
+  {
+   "nome": "Estância Bela Vista",
+   "tipo": "neighbourhood",
+   "lat": -20.76062,
+   "lon": -49.43781
+  },
+  {
+   "nome": "Estância Bela Vista Ipiguá",
+   "tipo": "neighbourhood",
+   "lat": -20.70907,
+   "lon": -49.39064
+  },
+  {
+   "nome": "Estância Bortoluzzo",
+   "tipo": "neighbourhood",
+   "lat": -20.89185,
+   "lon": -49.31347
+  },
+  {
+   "nome": "Estância Bosque Verde",
+   "tipo": "neighbourhood",
+   "lat": -20.73726,
+   "lon": -49.35379
+  },
+  {
+   "nome": "Estância Cavalari",
+   "tipo": "neighbourhood",
+   "lat": -20.75305,
+   "lon": -49.36436
+  },
+  {
+   "nome": "Estância das Paineiras",
+   "tipo": "neighbourhood",
+   "lat": -20.89763,
+   "lon": -49.28059
+  },
+  {
+   "nome": "Estância Galiléia",
+   "tipo": "neighbourhood",
+   "lat": -20.7254,
+   "lon": -49.39129
+  },
+  {
+   "nome": "Estância Gramado",
+   "tipo": "neighbourhood",
+   "lat": -20.7221,
+   "lon": -49.35769
+  },
+  {
+   "nome": "Estância Jockey Clube",
+   "tipo": "suburb",
+   "lat": -20.85632,
+   "lon": -49.34666
+  },
+  {
+   "nome": "Estância Manacás",
+   "tipo": "neighbourhood",
+   "lat": -20.85004,
+   "lon": -49.31588
+  },
+  {
+   "nome": "Estância Morada do Sol",
+   "tipo": "neighbourhood",
+   "lat": -20.71062,
+   "lon": -49.3899
+  },
+  {
+   "nome": "Estância Navarrete 1",
+   "tipo": "neighbourhood",
+   "lat": -20.87762,
+   "lon": -49.37349
+  },
+  {
+   "nome": "Estância Navarrete 2",
+   "tipo": "neighbourhood",
+   "lat": -20.87558,
+   "lon": -49.37401
+  },
+  {
+   "nome": "Estância Nossa Senhora Aparecida",
+   "tipo": "neighbourhood",
+   "lat": -20.76313,
+   "lon": -49.43697
+  },
+  {
+   "nome": "Estância Nossa Senhora de Fátima",
+   "tipo": "neighbourhood",
+   "lat": -20.84741,
+   "lon": -49.3159
+  },
+  {
+   "nome": "Estância Nossa Senhora de Lourdes",
+   "tipo": "neighbourhood",
+   "lat": -20.71592,
+   "lon": -49.39046
+  },
+  {
+   "nome": "Estância Oásis",
+   "tipo": "neighbourhood",
+   "lat": -20.72557,
+   "lon": -49.39333
+  },
+  {
+   "nome": "Estância Pousada dos Pássaros",
+   "tipo": "neighbourhood",
+   "lat": -20.73651,
+   "lon": -49.43273
+  },
+  {
+   "nome": "Estância Primavera",
+   "tipo": "neighbourhood",
+   "lat": -20.74205,
+   "lon": -49.34404
+  },
+  {
+   "nome": "Estância Primavera 1",
+   "tipo": "neighbourhood",
+   "lat": -20.7452,
+   "lon": -49.3424
+  },
+  {
+   "nome": "Estância Primavera 3",
+   "tipo": "neighbourhood",
+   "lat": -20.74263,
+   "lon": -49.3426
+  },
+  {
+   "nome": "Estância Primavera 4",
+   "tipo": "neighbourhood",
+   "lat": -20.74309,
+   "lon": -49.34157
+  },
+  {
+   "nome": "Estância Primavera II",
+   "tipo": "neighbourhood",
+   "lat": -20.83216,
+   "lon": -49.29372
+  },
+  {
+   "nome": "Estância San Carlo",
+   "tipo": "neighbourhood",
+   "lat": -20.71068,
+   "lon": -49.34747
+  },
+  {
+   "nome": "Estância San Luiz I",
+   "tipo": "neighbourhood",
+   "lat": -20.70456,
+   "lon": -49.29598
+  },
+  {
+   "nome": "Estância San Luiz II",
+   "tipo": "neighbourhood",
+   "lat": -20.70482,
+   "lon": -49.29927
+  },
+  {
+   "nome": "Estância Santa Ana",
+   "tipo": "neighbourhood",
+   "lat": -20.75101,
+   "lon": -49.3613
+  },
+  {
+   "nome": "Estância Santa Catarina",
+   "tipo": "neighbourhood",
+   "lat": -20.85126,
+   "lon": -49.31328
+  },
+  {
+   "nome": "Estância Santa Clara",
+   "tipo": "neighbourhood",
+   "lat": -20.74397,
+   "lon": -49.35314
+  },
+  {
+   "nome": "Estância Santa Edwirges I",
+   "tipo": "neighbourhood",
+   "lat": -20.73068,
+   "lon": -49.44915
+  },
+  {
+   "nome": "Estância Santa Edwirges II",
+   "tipo": "neighbourhood",
+   "lat": -20.73114,
+   "lon": -49.45324
+  },
+  {
+   "nome": "Estância Santa Helena",
+   "tipo": "neighbourhood",
+   "lat": -20.79545,
+   "lon": -49.32651
+  },
+  {
+   "nome": "Estância Santa Inês",
+   "tipo": "neighbourhood",
+   "lat": -20.8667,
+   "lon": -49.39732
+  },
+  {
+   "nome": "Estância Santa Inês 1",
+   "tipo": "neighbourhood",
+   "lat": -20.86958,
+   "lon": -49.40057
+  },
+  {
+   "nome": "Estância Santa Maria",
+   "tipo": "neighbourhood",
+   "lat": -20.86486,
+   "lon": -49.39168
+  },
+  {
+   "nome": "Estância Santo Antônio",
+   "tipo": "neighbourhood",
+   "lat": -20.72829,
+   "lon": -49.34825
+  },
+  {
+   "nome": "Estância São Carlos",
+   "tipo": "neighbourhood",
+   "lat": -20.70634,
+   "lon": -49.34847
+  },
+  {
+   "nome": "Estância São Felício",
+   "tipo": "neighbourhood",
+   "lat": -20.71903,
+   "lon": -49.40037
+  },
+  {
+   "nome": "Estancia São João",
+   "tipo": "neighbourhood",
+   "lat": -20.77193,
+   "lon": -49.37105
+  },
+  {
+   "nome": "Estancia São Marcos 2",
+   "tipo": "neighbourhood",
+   "lat": -20.86552,
+   "lon": -49.38704
+  },
+  {
+   "nome": "Estancia São Marcos 4",
+   "tipo": "neighbourhood",
+   "lat": -20.86419,
+   "lon": -49.3872
+  },
+  {
+   "nome": "Estancia São Pedro",
+   "tipo": "neighbourhood",
+   "lat": -20.86159,
+   "lon": -49.37949
+  },
+  {
+   "nome": "Estancia Sobrinho",
+   "tipo": "suburb",
+   "lat": -20.91139,
+   "lon": -49.37969
+  },
+  {
+   "nome": "Estância Sossego",
+   "tipo": "neighbourhood",
+   "lat": -20.73131,
+   "lon": -49.31889
+  },
+  {
+   "nome": "Estância Suíça",
+   "tipo": "neighbourhood",
+   "lat": -20.75569,
+   "lon": -49.37917
+  },
+  {
+   "nome": "Estância Trevo",
+   "tipo": "neighbourhood",
+   "lat": -20.90915,
+   "lon": -49.29528
+  },
+  {
+   "nome": "Estância Unitra",
+   "tipo": "neighbourhood",
+   "lat": -20.86535,
+   "lon": -49.35776
+  },
+  {
+   "nome": "Estância Vista Alegre",
+   "tipo": "neighbourhood",
+   "lat": -20.83877,
+   "lon": -49.4978
+  },
+  {
+   "nome": "Estância Vista Bonita",
+   "tipo": "neighbourhood",
+   "lat": -20.76723,
+   "lon": -49.42148
+  },
+  {
+   "nome": "Estância Vitória",
+   "tipo": "neighbourhood",
+   "lat": -20.72839,
+   "lon": -49.36396
+  },
+  {
+   "nome": "Estância Yvonne",
+   "tipo": "neighbourhood",
+   "lat": -20.79235,
+   "lon": -49.31823
+  },
+  {
+   "nome": "Estâncias do Pica-pau Amarelo",
+   "tipo": "neighbourhood",
+   "lat": -20.79015,
+   "lon": -49.28799
+  },
+  {
+   "nome": "Estrela do Líbano",
+   "tipo": "suburb",
+   "lat": -20.92049,
+   "lon": -49.45402
+  },
+  {
+   "nome": "Giardino I - Casas de Florença",
+   "tipo": "neighbourhood",
+   "lat": -20.80383,
+   "lon": -49.33211
+  },
+  {
+   "nome": "Giardino II - Casas de Veneza",
+   "tipo": "neighbourhood",
+   "lat": -20.80194,
+   "lon": -49.3319
+  },
+  {
+   "nome": "Gonzaga de Campos",
+   "tipo": "neighbourhood",
+   "lat": -20.81112,
+   "lon": -49.42391
+  },
+  {
+   "nome": "Higienópolis",
+   "tipo": "suburb",
+   "lat": -20.83686,
+   "lon": -49.38815
+  },
+  {
+   "nome": "Jardim Aclimação",
+   "tipo": "neighbourhood",
+   "lat": -20.84089,
+   "lon": -49.40398
+  },
+  {
+   "nome": "Jardim Alto Alegre",
+   "tipo": "neighbourhood",
+   "lat": -20.79013,
+   "lon": -49.35779
+  },
+  {
+   "nome": "Jardim Alto Rio Preto",
+   "tipo": "neighbourhood",
+   "lat": -20.82106,
+   "lon": -49.40555
+  },
+  {
+   "nome": "Jardim Alvorada",
+   "tipo": "neighbourhood",
+   "lat": -20.81849,
+   "lon": -49.49192
+  },
+  {
+   "nome": "Jardim América",
+   "tipo": "neighbourhood",
+   "lat": -20.79549,
+   "lon": -49.36622
+  },
+  {
+   "nome": "Jardim Americano",
+   "tipo": "neighbourhood",
+   "lat": -20.79839,
+   "lon": -49.36206
+  },
+  {
+   "nome": "Jardim Analice",
+   "tipo": "neighbourhood",
+   "lat": -20.81578,
+   "lon": -49.36492
+  },
+  {
+   "nome": "Jardim Anice",
+   "tipo": "neighbourhood",
+   "lat": -20.79168,
+   "lon": -49.35356
+  },
+  {
+   "nome": "Jardim Antonieta",
+   "tipo": "neighbourhood",
+   "lat": -20.79709,
+   "lon": -49.43327
+  },
+  {
+   "nome": "Jardim Antunes",
+   "tipo": "suburb",
+   "lat": -20.77008,
+   "lon": -49.40443
+  },
+  {
+   "nome": "Jardim Arroyo",
+   "tipo": "neighbourhood",
+   "lat": -20.76313,
+   "lon": -49.4054
+  },
+  {
+   "nome": "Jardim Asturias",
+   "tipo": "neighbourhood",
+   "lat": -20.78293,
+   "lon": -49.41604
+  },
+  {
+   "nome": "Jardim Bela Vista",
+   "tipo": "neighbourhood",
+   "lat": -20.79927,
+   "lon": -49.36243
+  },
+  {
+   "nome": "Jardim Bianco",
+   "tipo": "neighbourhood",
+   "lat": -20.78797,
+   "lon": -49.42549
+  },
+  {
+   "nome": "Jardim Boa Esperança",
+   "tipo": "neighbourhood",
+   "lat": -20.7071,
+   "lon": -49.29329
+  },
+  {
+   "nome": "Jardim Bordon",
+   "tipo": "neighbourhood",
+   "lat": -20.79731,
+   "lon": -49.36427
+  },
+  {
+   "nome": "Jardim Braga",
+   "tipo": "neighbourhood",
+   "lat": -20.77867,
+   "lon": -49.39385
+  },
+  {
+   "nome": "Jardim Califórnia",
+   "tipo": "suburb",
+   "lat": -20.93097,
+   "lon": -49.4434
+  },
+  {
+   "nome": "Jardim Campo Belo",
+   "tipo": "neighbourhood",
+   "lat": -20.76923,
+   "lon": -49.43491
+  },
+  {
+   "nome": "Jardim Canaã",
+   "tipo": "neighbourhood",
+   "lat": -20.80477,
+   "lon": -49.40343
+  },
+  {
+   "nome": "Jardim Castelinho",
+   "tipo": "neighbourhood",
+   "lat": -20.7754,
+   "lon": -49.35651
+  },
+  {
+   "nome": "Jardim Castelinho III",
+   "tipo": "neighbourhood",
+   "lat": -20.77226,
+   "lon": -49.35842
+  },
+  {
+   "nome": "Jardim Conceição",
+   "tipo": "neighbourhood",
+   "lat": -20.78851,
+   "lon": -49.3785
+  },
+  {
+   "nome": "Jardim Congonhas",
+   "tipo": "neighbourhood",
+   "lat": -20.80502,
+   "lon": -49.40566
+  },
+  {
+   "nome": "Jardim Costa do Sol",
+   "tipo": "neighbourhood",
+   "lat": -20.78814,
+   "lon": -49.39145
+  },
+  {
+   "nome": "Jardim Cristina",
+   "tipo": "suburb",
+   "lat": -20.81584,
+   "lon": -49.4995
+  },
+  {
+   "nome": "Jardim Cristina de Freitas",
+   "tipo": "suburb",
+   "lat": -20.92118,
+   "lon": -49.44607
+  },
+  {
+   "nome": "Jardim das Oliveiras",
+   "tipo": "neighbourhood",
+   "lat": -20.7721,
+   "lon": -49.41165
+  },
+  {
+   "nome": "Jardim das Palmeiras",
+   "tipo": "suburb",
+   "lat": -20.9235,
+   "lon": -49.45917
+  },
+  {
+   "nome": "Jardim das Palmeiras 3",
+   "tipo": "suburb",
+   "lat": -20.92155,
+   "lon": -49.47
+  },
+  {
+   "nome": "Jardim do Cedro",
+   "tipo": "neighbourhood",
+   "lat": -20.81396,
+   "lon": -49.4395
+  },
+  {
+   "nome": "Jardim do Centro",
+   "tipo": "neighbourhood",
+   "lat": -20.82603,
+   "lon": -49.38995
+  },
+  {
+   "nome": "Jardim do Lago",
+   "tipo": "neighbourhood",
+   "lat": -20.77249,
+   "lon": -49.3533
+  },
+  {
+   "nome": "Jardim do Norte",
+   "tipo": "neighbourhood",
+   "lat": -20.824,
+   "lon": -49.39189
+  },
+  {
+   "nome": "Jardim do Sul",
+   "tipo": "neighbourhood",
+   "lat": -20.82573,
+   "lon": -49.3925
+  },
+  {
+   "nome": "Jardim dos Buritis",
+   "tipo": "neighbourhood",
+   "lat": -20.75384,
+   "lon": -49.42357
+  },
+  {
+   "nome": "Jardim dos Gomes",
+   "tipo": "neighbourhood",
+   "lat": -20.81416,
+   "lon": -49.35546
+  },
+  {
+   "nome": "Jardim dos Ipês",
+   "tipo": "suburb",
+   "lat": -20.91788,
+   "lon": -49.46492
+  },
+  {
+   "nome": "Jardim Estrela",
+   "tipo": "neighbourhood",
+   "lat": -20.81372,
+   "lon": -49.35972
+  },
+  {
+   "nome": "Jardim Europa",
+   "tipo": "neighbourhood",
+   "lat": -20.82181,
+   "lon": -49.38307
+  },
+  {
+   "nome": "Jardim Felicidade",
+   "tipo": "neighbourhood",
+   "lat": -20.75677,
+   "lon": -49.35685
+  },
+  {
+   "nome": "Jardim Flamboyant",
+   "tipo": "neighbourhood",
+   "lat": -20.81712,
+   "lon": -49.49477
+  },
+  {
+   "nome": "Jardim Flor do Bairro",
+   "tipo": "neighbourhood",
+   "lat": -20.77003,
+   "lon": -49.37014
+  },
+  {
+   "nome": "Jardim Francisco Fernandes",
+   "tipo": "neighbourhood",
+   "lat": -20.84079,
+   "lon": -49.39753
+  },
+  {
+   "nome": "Jardim Fuscaldo",
+   "tipo": "neighbourhood",
+   "lat": -20.8054,
+   "lon": -49.35807
+  },
+  {
+   "nome": "Jardim Girassol",
+   "tipo": "neighbourhood",
+   "lat": -20.83516,
+   "lon": -49.48472
+  },
+  {
+   "nome": "Jardim Gisete",
+   "tipo": "neighbourhood",
+   "lat": -20.78765,
+   "lon": -49.42264
+  },
+  {
+   "nome": "Jardim Itapema",
+   "tipo": "neighbourhood",
+   "lat": -20.77945,
+   "lon": -49.39395
+  },
+  {
+   "nome": "Jardim Itapema 2",
+   "tipo": "neighbourhood",
+   "lat": -20.78035,
+   "lon": -49.39276
+  },
+  {
+   "nome": "Jardim Jandira",
+   "tipo": "neighbourhood",
+   "lat": -20.78228,
+   "lon": -49.35273
+  },
+  {
+   "nome": "Jardim João Paulo II",
+   "tipo": "suburb",
+   "lat": -20.77226,
+   "lon": -49.36517
+  },
+  {
+   "nome": "Jardim Juliana 1",
+   "tipo": "neighbourhood",
+   "lat": -20.7673,
+   "lon": -49.37049
+  },
+  {
+   "nome": "Jardim Juliana 2",
+   "tipo": "neighbourhood",
+   "lat": -20.76757,
+   "lon": -49.37001
+  },
+  {
+   "nome": "Jardim Karina 1",
+   "tipo": "neighbourhood",
+   "lat": -20.82387,
+   "lon": -49.49295
+  },
+  {
+   "nome": "Jardim Karina 2",
+   "tipo": "neighbourhood",
+   "lat": -20.82567,
+   "lon": -49.49046
+  },
+  {
+   "nome": "Jardim Karina 3",
+   "tipo": "neighbourhood",
+   "lat": -20.82744,
+   "lon": -49.48804
+  },
+  {
+   "nome": "Jardim Leste",
+   "tipo": "neighbourhood",
+   "lat": -20.77079,
+   "lon": -49.32322
+  },
+  {
+   "nome": "Jardim Los Angeles",
+   "tipo": "neighbourhood",
+   "lat": -20.79379,
+   "lon": -49.39932
+  },
+  {
+   "nome": "Jardim Manoel Del Arco",
+   "tipo": "neighbourhood",
+   "lat": -20.76732,
+   "lon": -49.39268
+  },
+  {
+   "nome": "Jardim Maracanã",
+   "tipo": "neighbourhood",
+   "lat": -20.82667,
+   "lon": -49.40934
+  },
+  {
+   "nome": "Jardim Marambaia",
+   "tipo": "neighbourhood",
+   "lat": -20.79288,
+   "lon": -49.35199
+  },
+  {
+   "nome": "Jardim Maria Cândida",
+   "tipo": "neighbourhood",
+   "lat": -20.82083,
+   "lon": -49.40902
+  },
+  {
+   "nome": "Jardim Maria Lucia",
+   "tipo": "neighbourhood",
+   "lat": -20.76728,
+   "lon": -49.40498
+  },
+  {
+   "nome": "Jardim Michael Jacob",
+   "tipo": "neighbourhood",
+   "lat": -20.83995,
+   "lon": -49.40001
+  },
+  {
+   "nome": "Jardim Monte Cristo",
+   "tipo": "neighbourhood",
+   "lat": -20.75796,
+   "lon": -49.34706
+  },
+  {
+   "nome": "Jardim Morumbi",
+   "tipo": "neighbourhood",
+   "lat": -20.83564,
+   "lon": -49.39573
+  },
+  {
+   "nome": "Jardim Moysés Miguel Haddad",
+   "tipo": "neighbourhood",
+   "lat": -20.85546,
+   "lon": -49.41158
+  },
+  {
+   "nome": "Jardim Mugnaini",
+   "tipo": "neighbourhood",
+   "lat": -20.78469,
+   "lon": -49.38995
+  },
+  {
+   "nome": "Jardim Municipal",
+   "tipo": "neighbourhood",
+   "lat": -20.79251,
+   "lon": -49.35856
+  },
+  {
+   "nome": "Jardim Nazareth",
+   "tipo": "neighbourhood",
+   "lat": -20.78269,
+   "lon": -49.35834
+  },
+  {
+   "nome": "Jardim Nilza Helena",
+   "tipo": "neighbourhood",
+   "lat": -20.81549,
+   "lon": -49.35421
+  },
+  {
+   "nome": "Jardim Novo Aeroporto",
+   "tipo": "neighbourhood",
+   "lat": -20.80999,
+   "lon": -49.40159
+  },
+  {
+   "nome": "Jardim Novo Mundo",
+   "tipo": "neighbourhood",
+   "lat": -20.82969,
+   "lon": -49.37829
+  },
+  {
+   "nome": "Jardim Nunes",
+   "tipo": "suburb",
+   "lat": -20.74997,
+   "lon": -49.38769
+  },
+  {
+   "nome": "Jardim Nunes 2",
+   "tipo": "neighbourhood",
+   "lat": -20.75005,
+   "lon": -49.379
+  },
+  {
+   "nome": "Jardim Ouro Verde",
+   "tipo": "neighbourhood",
+   "lat": -20.83747,
+   "lon": -49.37696
+  },
+  {
+   "nome": "Jardim Panorama",
+   "tipo": "neighbourhood",
+   "lat": -20.82752,
+   "lon": -49.40235
+  },
+  {
+   "nome": "Jardim Paraíso",
+   "tipo": "neighbourhood",
+   "lat": -20.77959,
+   "lon": -49.38747
+  },
+  {
+   "nome": "Jardim Paulista",
+   "tipo": "neighbourhood",
+   "lat": -20.80201,
+   "lon": -49.36753
+  },
+  {
+   "nome": "Jardim Paulistano",
+   "tipo": "neighbourhood",
+   "lat": -20.863,
+   "lon": -49.4156
+  },
+  {
+   "nome": "Jardim Planalto",
+   "tipo": "neighbourhood",
+   "lat": -20.76447,
+   "lon": -49.38662
+  },
+  {
+   "nome": "Jardim Primavera",
+   "tipo": "neighbourhood",
+   "lat": -20.80073,
+   "lon": -49.35876
+  },
+  {
+   "nome": "Jardim Regina Maura",
+   "tipo": "neighbourhood",
+   "lat": -20.79236,
+   "lon": -49.36705
+  },
+  {
+   "nome": "Jardim Residencial das Laranjeiras",
+   "tipo": "neighbourhood",
+   "lat": -20.78723,
+   "lon": -49.41203
+  },
+  {
+   "nome": "Jardim Residencial Vale do Sol",
+   "tipo": "neighbourhood",
+   "lat": -20.78252,
+   "lon": -49.38506
+  },
+  {
+   "nome": "Jardim San Remo",
+   "tipo": "suburb",
+   "lat": -20.90982,
+   "lon": -49.45084
+  },
+  {
+   "nome": "Jardim Santa Catarina",
+   "tipo": "neighbourhood",
+   "lat": -20.82778,
+   "lon": -49.36948
+  },
+  {
+   "nome": "Jardim Santa Claudia",
+   "tipo": "neighbourhood",
+   "lat": -20.82792,
+   "lon": -49.49826
+  },
+  {
+   "nome": "Jardim Santa Luzia",
+   "tipo": "neighbourhood",
+   "lat": -20.82531,
+   "lon": -49.37284
+  },
+  {
+   "nome": "Jardim Santa Maria",
+   "tipo": "neighbourhood",
+   "lat": -20.82994,
+   "lon": -49.36446
+  },
+  {
+   "nome": "Jardim Santa Rosa 1",
+   "tipo": "neighbourhood",
+   "lat": -20.78535,
+   "lon": -49.37115
+  },
+  {
+   "nome": "Jardim Santa Rosa II",
+   "tipo": "neighbourhood",
+   "lat": -20.78387,
+   "lon": -49.36708
+  },
+  {
+   "nome": "Jardim Santo Antônio I",
+   "tipo": "suburb",
+   "lat": -20.76008,
+   "lon": -49.39745
+  },
+  {
+   "nome": "Jardim São Bento",
+   "tipo": "neighbourhood",
+   "lat": -20.76652,
+   "lon": -49.36683
+  },
+  {
+   "nome": "Jardim São Marco",
+   "tipo": "neighbourhood",
+   "lat": -20.8393,
+   "lon": -49.3592
+  },
+  {
+   "nome": "Jardim São Paulo",
+   "tipo": "neighbourhood",
+   "lat": -20.79761,
+   "lon": -49.35664
+  },
+  {
+   "nome": "Jardim São Vicente",
+   "tipo": "neighbourhood",
+   "lat": -20.80017,
+   "lon": -49.36855
+  },
+  {
+   "nome": "Jardim Schmitt",
+   "tipo": "neighbourhood",
+   "lat": -20.86371,
+   "lon": -49.30749
+  },
+  {
+   "nome": "Jardim Seixas",
+   "tipo": "neighbourhood",
+   "lat": -20.8061,
+   "lon": -49.3685
+  },
+  {
+   "nome": "Jardim Senedu",
+   "tipo": "neighbourhood",
+   "lat": -20.77903,
+   "lon": -49.37235
+  },
+  {
+   "nome": "Jardim Seyon",
+   "tipo": "neighbourhood",
+   "lat": -20.77808,
+   "lon": -49.36969
+  },
+  {
+   "nome": "Jardim Simões",
+   "tipo": "neighbourhood",
+   "lat": -20.76809,
+   "lon": -49.38338
+  },
+  {
+   "nome": "Jardim Sônia",
+   "tipo": "neighbourhood",
+   "lat": -20.78468,
+   "lon": -49.37287
+  },
+  {
+   "nome": "Jardim Soraia",
+   "tipo": "neighbourhood",
+   "lat": -20.81686,
+   "lon": -49.35513
+  },
+  {
+   "nome": "Jardim Suzana",
+   "tipo": "neighbourhood",
+   "lat": -20.78181,
+   "lon": -49.37666
+  },
+  {
+   "nome": "Jardim Tangará",
+   "tipo": "neighbourhood",
+   "lat": -20.8409,
+   "lon": -49.37348
+  },
+  {
+   "nome": "Jardim Tarraf 1",
+   "tipo": "neighbourhood",
+   "lat": -20.84041,
+   "lon": -49.40804
+  },
+  {
+   "nome": "Jardim Tarraf 2",
+   "tipo": "neighbourhood",
+   "lat": -20.83681,
+   "lon": -49.41541
+  },
+  {
+   "nome": "Jardim Urano",
+   "tipo": "suburb",
+   "lat": -20.83246,
+   "lon": -49.37569
+  },
+  {
+   "nome": "Jardim Urupês",
+   "tipo": "neighbourhood",
+   "lat": -20.77424,
+   "lon": -49.37208
+  },
+  {
+   "nome": "Jardim Veneza",
+   "tipo": "neighbourhood",
+   "lat": -20.88205,
+   "lon": -49.32922
+  },
+  {
+   "nome": "Jardim Vetorasso",
+   "tipo": "suburb",
+   "lat": -20.79744,
+   "lon": -49.41398
+  },
+  {
+   "nome": "Jardim Vieira",
+   "tipo": "neighbourhood",
+   "lat": -20.79225,
+   "lon": -49.36504
+  },
+  {
+   "nome": "Jardim Viena",
+   "tipo": "neighbourhood",
+   "lat": -20.84892,
+   "lon": -49.38225
+  },
+  {
+   "nome": "Jardim Vitagliano",
+   "tipo": "neighbourhood",
+   "lat": -20.8738,
+   "lon": -49.42422
+  },
+  {
+   "nome": "Jardim Vitória Régia",
+   "tipo": "neighbourhood",
+   "lat": -20.82045,
+   "lon": -49.35286
+  },
+  {
+   "nome": "Jardim Yolanda",
+   "tipo": "neighbourhood",
+   "lat": -20.80383,
+   "lon": -49.34891
+  },
+  {
+   "nome": "Jardim Zaira",
+   "tipo": "neighbourhood",
+   "lat": -20.81727,
+   "lon": -49.35107
+  },
+  {
+   "nome": "Jardim Zé Menino",
+   "tipo": "neighbourhood",
+   "lat": -20.76593,
+   "lon": -49.39247
+  },
+  {
+   "nome": "Jardins de Montalcino",
+   "tipo": "neighbourhood",
+   "lat": -20.7598,
+   "lon": -49.32066
+  },
+  {
+   "nome": "Jardins Rio Preto",
+   "tipo": "neighbourhood",
+   "lat": -20.80675,
+   "lon": -49.43039
+  },
+  {
+   "nome": "Loteamento Auferville III",
+   "tipo": "neighbourhood",
+   "lat": -20.8946,
+   "lon": -49.36466
+  },
+  {
+   "nome": "Loteamento Bela Vista",
+   "tipo": "neighbourhood",
+   "lat": -20.83463,
+   "lon": -49.49536
+  },
+  {
+   "nome": "Loteamento Caparroz",
+   "tipo": "neighbourhood",
+   "lat": -20.78245,
+   "lon": -49.37314
+  },
+  {
+   "nome": "Loteamento Coplan",
+   "tipo": "neighbourhood",
+   "lat": -20.84647,
+   "lon": -49.3719
+  },
+  {
+   "nome": "Loteamento de Chacaras Recanto de Alá",
+   "tipo": "neighbourhood",
+   "lat": -20.83053,
+   "lon": -49.46543
+  },
+  {
+   "nome": "Loteamento Egydio Zani",
+   "tipo": "neighbourhood",
+   "lat": -20.72444,
+   "lon": -49.37744
+  },
+  {
+   "nome": "Loteamento Fazenda Rio Preto",
+   "tipo": "neighbourhood",
+   "lat": -20.84633,
+   "lon": -49.32272
+  },
+  {
+   "nome": "Loteamento Jardim do Norte",
+   "tipo": "neighbourhood",
+   "lat": -20.76694,
+   "lon": -49.37425
+  },
+  {
+   "nome": "Loteamento Jayme Rosário",
+   "tipo": "neighbourhood",
+   "lat": -20.79163,
+   "lon": -49.37407
+  },
+  {
+   "nome": "Loteamento João Gonçalves da Silva",
+   "tipo": "neighbourhood",
+   "lat": -20.79108,
+   "lon": -49.38052
+  },
+  {
+   "nome": "Loteamento Jorge Rodrigues",
+   "tipo": "neighbourhood",
+   "lat": -20.74171,
+   "lon": -49.38186
+  },
+  {
+   "nome": "Loteamento Marisa Cristina I",
+   "tipo": "neighbourhood",
+   "lat": -20.75814,
+   "lon": -49.36953
+  },
+  {
+   "nome": "Loteamento Marisa Cristina II",
+   "tipo": "neighbourhood",
+   "lat": -20.75766,
+   "lon": -49.36823
+  },
+  {
+   "nome": "Loteamento Morada Campestre",
+   "tipo": "neighbourhood",
+   "lat": -20.83819,
+   "lon": -49.32857
+  },
+  {
+   "nome": "Loteamento Parque das Flores",
+   "tipo": "neighbourhood",
+   "lat": -20.83755,
+   "lon": -49.4889
+  },
+  {
+   "nome": "Loteamento Residencial José Bernardes Coelho",
+   "tipo": "neighbourhood",
+   "lat": -20.75186,
+   "lon": -49.43192
+  },
+  {
+   "nome": "Loteamento Rios do Sul",
+   "tipo": "neighbourhood",
+   "lat": -20.75277,
+   "lon": -49.39008
+  },
+  {
+   "nome": "Loteamento São Francico de Assis",
+   "tipo": "neighbourhood",
+   "lat": -20.81681,
+   "lon": -49.49649
+  },
+  {
+   "nome": "Loteamento São João",
+   "tipo": "neighbourhood",
+   "lat": -20.83318,
+   "lon": -49.40105
+  },
+  {
+   "nome": "Loteamento Vila Nova",
+   "tipo": "neighbourhood",
+   "lat": -20.81297,
+   "lon": -49.36906
+  },
+  {
+   "nome": "Maisparque Rio Preto",
+   "tipo": "neighbourhood",
+   "lat": -20.76567,
+   "lon": -49.34415
+  },
+  {
+   "nome": "Marte Santa Catarina",
+   "tipo": "neighbourhood",
+   "lat": -20.80574,
+   "lon": -49.41244
+  },
+  {
+   "nome": "Mini Distrito Centenário da Emancipação",
+   "tipo": "neighbourhood",
+   "lat": -20.76262,
+   "lon": -49.38161
+  },
+  {
+   "nome": "Mini Distrito Industrial Giuliane I",
+   "tipo": "neighbourhood",
+   "lat": -20.77554,
+   "lon": -49.37065
+  },
+  {
+   "nome": "Mini Distrito Jaguaré",
+   "tipo": "neighbourhood",
+   "lat": -20.77672,
+   "lon": -49.36983
+  },
+  {
+   "nome": "Mini Distrito Professor Adail Vetorazzo",
+   "tipo": "neighbourhood",
+   "lat": -20.76841,
+   "lon": -49.39561
+  },
+  {
+   "nome": "Navarrete",
+   "tipo": "neighbourhood",
+   "lat": -20.82157,
+   "lon": -49.49758
+  },
+  {
+   "nome": "Newe Atma",
+   "tipo": "neighbourhood",
+   "lat": -20.81587,
+   "lon": -49.32873
+  },
+  {
+   "nome": "Nova Redentora",
+   "tipo": "neighbourhood",
+   "lat": -20.82808,
+   "lon": -49.3906
+  },
+  {
+   "nome": "Núcleo Habitacional Pica-Pau Amarelo",
+   "tipo": "neighbourhood",
+   "lat": -20.72095,
+   "lon": -49.33709
+  },
+  {
+   "nome": "Núcleo Recanto Belo",
+   "tipo": "neighbourhood",
+   "lat": -20.89781,
+   "lon": -49.43597
+  },
+  {
+   "nome": "Parque Celeste",
+   "tipo": "neighbourhood",
+   "lat": -20.81871,
+   "lon": -49.36458
+  },
+  {
+   "nome": "Parque da Cidadania",
+   "tipo": "suburb",
+   "lat": -20.75142,
+   "lon": -49.40653
+  },
+  {
+   "nome": "Parque das Amoras",
+   "tipo": "neighbourhood",
+   "lat": -20.86359,
+   "lon": -49.31351
+  },
+  {
+   "nome": "Parque das Aroeiras",
+   "tipo": "neighbourhood",
+   "lat": -20.78587,
+   "lon": -49.43325
+  },
+  {
+   "nome": "Parque das Aroeiras II",
+   "tipo": "neighbourhood",
+   "lat": -20.78706,
+   "lon": -49.43933
+  },
+  {
+   "nome": "Parque das Flores",
+   "tipo": "neighbourhood",
+   "lat": -20.83882,
+   "lon": -49.49196
+  },
+  {
+   "nome": "Parque das Flores 1",
+   "tipo": "neighbourhood",
+   "lat": -20.77787,
+   "lon": -49.37471
+  },
+  {
+   "nome": "Parque das Flores 2",
+   "tipo": "neighbourhood",
+   "lat": -20.77792,
+   "lon": -49.37259
+  },
+  {
+   "nome": "Parque das Perdizes",
+   "tipo": "suburb",
+   "lat": -20.76323,
+   "lon": -49.38961
+  },
+  {
+   "nome": "Parque do Sabiá",
+   "tipo": "neighbourhood",
+   "lat": -20.73044,
+   "lon": -49.33326
+  },
+  {
+   "nome": "Parque do Sol",
+   "tipo": "neighbourhood",
+   "lat": -20.79979,
+   "lon": -49.41946
+  },
+  {
+   "nome": "Parque dos Buritis",
+   "tipo": "suburb",
+   "lat": -20.81504,
+   "lon": -49.48622
+  },
+  {
+   "nome": "Parque dos Pássaros",
+   "tipo": "neighbourhood",
+   "lat": -20.87243,
+   "lon": -49.41998
+  },
+  {
+   "nome": "Parque Estoril",
+   "tipo": "neighbourhood",
+   "lat": -20.83589,
+   "lon": -49.38194
+  },
+  {
+   "nome": "Parque Industrial",
+   "tipo": "suburb",
+   "lat": -20.80241,
+   "lon": -49.3923
+  },
+  {
+   "nome": "Parque Industrial Campo Verde",
+   "tipo": "neighbourhood",
+   "lat": -20.83035,
+   "lon": -49.35886
+  },
+  {
+   "nome": "Parque Industrial Tancredo Neves",
+   "tipo": "neighbourhood",
+   "lat": -20.83748,
+   "lon": -49.35322
+  },
+  {
+   "nome": "Parque Jaguaré",
+   "tipo": "suburb",
+   "lat": -20.77411,
+   "lon": -49.36845
+  },
+  {
+   "nome": "Parque Maria Serantes",
+   "tipo": "neighbourhood",
+   "lat": -20.7583,
+   "lon": -49.32249
+  },
+  {
+   "nome": "Parque Nova Esperança",
+   "tipo": "neighbourhood",
+   "lat": -20.8315,
+   "lon": -49.48857
+  },
+  {
+   "nome": "Parque Olinda Sala",
+   "tipo": "neighbourhood",
+   "lat": -20.72053,
+   "lon": -49.34506
+  },
+  {
+   "nome": "Parque Quinta das Paineiras",
+   "tipo": "neighbourhood",
+   "lat": -20.83251,
+   "lon": -49.3685
+  },
+  {
+   "nome": "Parque Residencial Água Limpa 1",
+   "tipo": "suburb",
+   "lat": -20.91302,
+   "lon": -49.4474
+  },
+  {
+   "nome": "Parque Residencial Água Limpa 2",
+   "tipo": "suburb",
+   "lat": -20.91085,
+   "lon": -49.44782
+  },
+  {
+   "nome": "Parque Residencial Água Limpa 3",
+   "tipo": "suburb",
+   "lat": -20.91172,
+   "lon": -49.44819
+  },
+  {
+   "nome": "Parque Residencial Cambuí",
+   "tipo": "neighbourhood",
+   "lat": -20.84072,
+   "lon": -49.34412
+  },
+  {
+   "nome": "Parque Residencial Castelinho",
+   "tipo": "neighbourhood",
+   "lat": -20.77759,
+   "lon": -49.36095
+  },
+  {
+   "nome": "Parque Residencial da Fraternidade",
+   "tipo": "suburb",
+   "lat": -20.87509,
+   "lon": -49.3418
+  },
+  {
+   "nome": "Parque Residencial da Fraternidade 2",
+   "tipo": "neighbourhood",
+   "lat": -20.88148,
+   "lon": -49.33975
+  },
+  {
+   "nome": "Parque Residencial da Fraternidade 3",
+   "tipo": "neighbourhood",
+   "lat": -20.87527,
+   "lon": -49.33382
+  },
+  {
+   "nome": "Parque Residencial Dignidade",
+   "tipo": "suburb",
+   "lat": -20.75182,
+   "lon": -49.43688
+  },
+  {
+   "nome": "Parque Residencial Dom Lafayete Libânio",
+   "tipo": "neighbourhood",
+   "lat": -20.77401,
+   "lon": -49.388
+  },
+  {
+   "nome": "Parque Residencial Edson Baffi",
+   "tipo": "neighbourhood",
+   "lat": -20.75619,
+   "lon": -49.44143
+  },
+  {
+   "nome": "Parque Residencial J Macedo",
+   "tipo": "neighbourhood",
+   "lat": -20.79921,
+   "lon": -49.42883
+  },
+  {
+   "nome": "Parque Residencial Jardim do Bosque",
+   "tipo": "neighbourhood",
+   "lat": -20.78026,
+   "lon": -49.36727
+  },
+  {
+   "nome": "Parque Residencial Jardim do Bosque II",
+   "tipo": "neighbourhood",
+   "lat": -20.77887,
+   "lon": -49.36586
+  },
+  {
+   "nome": "Parque Residencial João da Silva",
+   "tipo": "neighbourhood",
+   "lat": -20.78708,
+   "lon": -49.40903
+  },
+  {
+   "nome": "Parque Residencial Joaquim Nabuco",
+   "tipo": "neighbourhood",
+   "lat": -20.79155,
+   "lon": -49.37563
+  },
+  {
+   "nome": "Parque Residencial Lauriano Tebar",
+   "tipo": "neighbourhood",
+   "lat": -20.80179,
+   "lon": -49.41045
+  },
+  {
+   "nome": "Parque Residencial Lauriano Tebar II",
+   "tipo": "neighbourhood",
+   "lat": -20.83197,
+   "lon": -49.34861
+  },
+  {
+   "nome": "Parque Residencial Mançor Daud",
+   "tipo": "neighbourhood",
+   "lat": -20.82376,
+   "lon": -49.36138
+  },
+  {
+   "nome": "Parque Residencial Maria Zorita",
+   "tipo": "neighbourhood",
+   "lat": -20.78337,
+   "lon": -49.42371
+  },
+  {
+   "nome": "Parque Residencial Romano Calil",
+   "tipo": "neighbourhood",
+   "lat": -20.82554,
+   "lon": -49.3561
+  },
+  {
+   "nome": "Parque Residencial Universo",
+   "tipo": "neighbourhood",
+   "lat": -20.7834,
+   "lon": -49.41784
+  },
+  {
+   "nome": "Parque São Miguel",
+   "tipo": "neighbourhood",
+   "lat": -20.79782,
+   "lon": -49.34882
+  },
+  {
+   "nome": "Parque Tecnológico Vanda Karina Simei Bolçone",
+   "tipo": "neighbourhood",
+   "lat": -20.83792,
+   "lon": -49.42312
+  },
+  {
+   "nome": "Polo Joalheiro",
+   "tipo": "neighbourhood",
+   "lat": -20.82624,
+   "lon": -49.41861
+  },
+  {
+   "nome": "Portal da Cidade Amiga",
+   "tipo": "suburb",
+   "lat": -20.80821,
+   "lon": -49.49788
+  },
+  {
+   "nome": "Quinta do Lago - Lake Victoria",
+   "tipo": "neighbourhood",
+   "lat": -20.82187,
+   "lon": -49.32061
+  },
+  {
+   "nome": "Recanto das Aves",
+   "tipo": "neighbourhood",
+   "lat": -20.72886,
+   "lon": -49.38192
+  },
+  {
+   "nome": "Recanto do Beija-Flor",
+   "tipo": "neighbourhood",
+   "lat": -20.82301,
+   "lon": -49.49035
+  },
+  {
+   "nome": "Recanto Duas Vendas",
+   "tipo": "neighbourhood",
+   "lat": -20.76093,
+   "lon": -49.38084
+  },
+  {
+   "nome": "Recanto Feliz",
+   "tipo": "neighbourhood",
+   "lat": -20.79258,
+   "lon": -49.31389
+  },
+  {
+   "nome": "Recanto São Lucas",
+   "tipo": "neighbourhood",
+   "lat": -20.76481,
+   "lon": -49.30754
+  },
+  {
+   "nome": "Remanso dos Coqueiros",
+   "tipo": "suburb",
+   "lat": -20.91916,
+   "lon": -49.45761
+  },
+  {
+   "nome": "Resedencial Bella Vittá Monte Libano",
+   "tipo": "neighbourhood",
+   "lat": -20.89841,
+   "lon": -49.45479
+  },
+  {
+   "nome": "Reservas do Bosque",
+   "tipo": "neighbourhood",
+   "lat": -20.88695,
+   "lon": -49.43597
+  },
+  {
+   "nome": "Residencial Alta Vista",
+   "tipo": "neighbourhood",
+   "lat": -20.75584,
+   "lon": -49.34114
+  },
+  {
+   "nome": "Residencial Alto das Andorinhas",
+   "tipo": "neighbourhood",
+   "lat": -20.7733,
+   "lon": -49.39191
+  },
+  {
+   "nome": "Residencial Amazonas",
+   "tipo": "neighbourhood",
+   "lat": -20.76297,
+   "lon": -49.35457
+  },
+  {
+   "nome": "Residencial Ana Célia",
+   "tipo": "neighbourhood",
+   "lat": -20.77819,
+   "lon": -49.40038
+  },
+  {
+   "nome": "Residencial Ana Célia 2",
+   "tipo": "neighbourhood",
+   "lat": -20.77758,
+   "lon": -49.39769
+  },
+  {
+   "nome": "Residencial Antoniassi",
+   "tipo": "neighbourhood",
+   "lat": -20.8649,
+   "lon": -49.30988
+  },
+  {
+   "nome": "Residencial Ary Attab",
+   "tipo": "neighbourhood",
+   "lat": -20.80086,
+   "lon": -49.4273
+  },
+  {
+   "nome": "Residencial Ary Attab III",
+   "tipo": "neighbourhood",
+   "lat": -20.8016,
+   "lon": -49.43749
+  },
+  {
+   "nome": "Residencial Aurora 1",
+   "tipo": "suburb",
+   "lat": -20.93062,
+   "lon": -49.46975
+  },
+  {
+   "nome": "Residencial Avenida Parque",
+   "tipo": "suburb",
+   "lat": -20.9306,
+   "lon": -49.45204
+  },
+  {
+   "nome": "Residencial Bom Sucesso",
+   "tipo": "neighbourhood",
+   "lat": -20.76468,
+   "lon": -49.4142
+  },
+  {
+   "nome": "Residencial Borboleta",
+   "tipo": "suburb",
+   "lat": -20.92507,
+   "lon": -49.44539
+  },
+  {
+   "nome": "Residencial Borboleta 2",
+   "tipo": "suburb",
+   "lat": -20.92566,
+   "lon": -49.44259
+  },
+  {
+   "nome": "Residencial Borboleta 3",
+   "tipo": "suburb",
+   "lat": -20.92631,
+   "lon": -49.44041
+  },
+  {
+   "nome": "Residencial Caetano",
+   "tipo": "neighbourhood",
+   "lat": -20.75666,
+   "lon": -49.3853
+  },
+  {
+   "nome": "Residencial Caetano II",
+   "tipo": "neighbourhood",
+   "lat": -20.75411,
+   "lon": -49.39123
+  },
+  {
+   "nome": "Residencial Califórnia",
+   "tipo": "neighbourhood",
+   "lat": -20.76777,
+   "lon": -49.41428
+  },
+  {
+   "nome": "Residencial Campo Belo",
+   "tipo": "suburb",
+   "lat": -20.92227,
+   "lon": -49.46391
+  },
+  {
+   "nome": "Residencial Catelani",
+   "tipo": "suburb",
+   "lat": -20.92957,
+   "lon": -49.44614
+  },
+  {
+   "nome": "Residencial Cidade Alta",
+   "tipo": "neighbourhood",
+   "lat": -20.74057,
+   "lon": -49.40677
+  },
+  {
+   "nome": "Residencial Cidade Jardim",
+   "tipo": "neighbourhood",
+   "lat": -20.84663,
+   "lon": -49.36654
+  },
+  {
+   "nome": "Residencial Colina Azul",
+   "tipo": "neighbourhood",
+   "lat": -20.87303,
+   "lon": -49.38129
+  },
+  {
+   "nome": "Residencial Colorado",
+   "tipo": "neighbourhood",
+   "lat": -20.77078,
+   "lon": -49.41475
+  },
+  {
+   "nome": "Residencial D'Itália",
+   "tipo": "suburb",
+   "lat": -20.92665,
+   "lon": -49.45383
+  },
+  {
+   "nome": "Residencial da Amizade",
+   "tipo": "neighbourhood",
+   "lat": -20.7553,
+   "lon": -49.32491
+  },
+  {
+   "nome": "Residencial da Lealdade",
+   "tipo": "neighbourhood",
+   "lat": -20.75761,
+   "lon": -49.32836
+  },
+  {
+   "nome": "Residencial das Américas",
+   "tipo": "neighbourhood",
+   "lat": -20.77934,
+   "lon": -49.42707
+  },
+  {
+   "nome": "Residencial Doutor João Tajara",
+   "tipo": "neighbourhood",
+   "lat": -20.78614,
+   "lon": -49.34662
+  },
+  {
+   "nome": "Residencial e Empresarial Ascolo Martin",
+   "tipo": "neighbourhood",
+   "lat": -20.80009,
+   "lon": -49.32729
+  },
+  {
+   "nome": "Residencial Estrela do Oriente",
+   "tipo": "neighbourhood",
+   "lat": -20.91276,
+   "lon": -49.46249
+  },
+  {
+   "nome": "Residencial Etemp",
+   "tipo": "neighbourhood",
+   "lat": -20.78496,
+   "lon": -49.42058
+  },
+  {
+   "nome": "Residencial Flamboyant",
+   "tipo": "suburb",
+   "lat": -20.91626,
+   "lon": -49.46949
+  },
+  {
+   "nome": "Residencial Gabriela",
+   "tipo": "neighbourhood",
+   "lat": -20.79046,
+   "lon": -49.42896
+  },
+  {
+   "nome": "Residencial Garcia 1",
+   "tipo": "neighbourhood",
+   "lat": -20.76824,
+   "lon": -49.36591
+  },
+  {
+   "nome": "Residencial Garcia II",
+   "tipo": "neighbourhood",
+   "lat": -20.76814,
+   "lon": -49.36424
+  },
+  {
+   "nome": "Residencial Jardim Mônaco",
+   "tipo": "suburb",
+   "lat": -20.91717,
+   "lon": -49.47348
+  },
+  {
+   "nome": "Residencial Jatobás",
+   "tipo": "neighbourhood",
+   "lat": -20.78256,
+   "lon": -49.45236
+  },
+  {
+   "nome": "Residencial Jéssica",
+   "tipo": "neighbourhood",
+   "lat": -20.75967,
+   "lon": -49.38469
+  },
+  {
+   "nome": "Residencial Lago Sul",
+   "tipo": "neighbourhood",
+   "lat": -20.90512,
+   "lon": -49.45511
+  },
+  {
+   "nome": "Residencial Lago Sul 2",
+   "tipo": "neighbourhood",
+   "lat": -20.90594,
+   "lon": -49.46132
+  },
+  {
+   "nome": "Residencial Laguna",
+   "tipo": "neighbourhood",
+   "lat": -20.8006,
+   "lon": -49.49993
+  },
+  {
+   "nome": "Residencial Luz da Esperança",
+   "tipo": "neighbourhood",
+   "lat": -20.7722,
+   "lon": -49.31714
+  },
+  {
+   "nome": "Residencial Luzia Poloto",
+   "tipo": "neighbourhood",
+   "lat": -20.75541,
+   "lon": -49.39222
+  },
+  {
+   "nome": "Residencial Macedo Teles I",
+   "tipo": "neighbourhood",
+   "lat": -20.80127,
+   "lon": -49.41834
+  },
+  {
+   "nome": "Residencial Macedo Teles II",
+   "tipo": "neighbourhood",
+   "lat": -20.80051,
+   "lon": -49.41399
+  },
+  {
+   "nome": "Residencial Machado",
+   "tipo": "neighbourhood",
+   "lat": -20.76395,
+   "lon": -49.35632
+  },
+  {
+   "nome": "Residencial Mais Parque Mirassol",
+   "tipo": "neighbourhood",
+   "lat": -20.80247,
+   "lon": -49.47813
+  },
+  {
+   "nome": "Residencial Mais Viver",
+   "tipo": "neighbourhood",
+   "lat": -20.72655,
+   "lon": -49.38485
+  },
+  {
+   "nome": "Residencial Maria Clara",
+   "tipo": "neighbourhood",
+   "lat": -20.75623,
+   "lon": -49.41887
+  },
+  {
+   "nome": "Residencial Maria Clara 2",
+   "tipo": "neighbourhood",
+   "lat": -20.75205,
+   "lon": -49.42006
+  },
+  {
+   "nome": "Residencial Maria Drummond",
+   "tipo": "neighbourhood",
+   "lat": -20.78399,
+   "lon": -49.43702
+  },
+  {
+   "nome": "Residencial Maria Júlia",
+   "tipo": "neighbourhood",
+   "lat": -20.801,
+   "lon": -49.32036
+  },
+  {
+   "nome": "Residencial Marialda Mello",
+   "tipo": "neighbourhood",
+   "lat": -20.78357,
+   "lon": -49.44143
+  },
+  {
+   "nome": "Residencial Mário de Mattos",
+   "tipo": "neighbourhood",
+   "lat": -20.78444,
+   "lon": -49.42774
+  },
+  {
+   "nome": "Residencial Maza",
+   "tipo": "neighbourhood",
+   "lat": -20.86678,
+   "lon": -49.30564
+  },
+  {
+   "nome": "Residencial Menezes",
+   "tipo": "suburb",
+   "lat": -20.9205,
+   "lon": -49.44172
+  },
+  {
+   "nome": "Residencial Menezes 2",
+   "tipo": "suburb",
+   "lat": -20.92091,
+   "lon": -49.44033
+  },
+  {
+   "nome": "Residencial Menezes 3",
+   "tipo": "suburb",
+   "lat": -20.92122,
+   "lon": -49.43777
+  },
+  {
+   "nome": "Residencial Menezes 4",
+   "tipo": "suburb",
+   "lat": -20.92536,
+   "lon": -49.43757
+  },
+  {
+   "nome": "Residencial Menezes 5",
+   "tipo": "suburb",
+   "lat": -20.92704,
+   "lon": -49.43585
+  },
+  {
+   "nome": "Residencial Mirante",
+   "tipo": "neighbourhood",
+   "lat": -20.78506,
+   "lon": -49.44094
+  },
+  {
+   "nome": "Residencial Miravista",
+   "tipo": "neighbourhood",
+   "lat": -20.80876,
+   "lon": -49.47269
+  },
+  {
+   "nome": "Residencial Monte Verde",
+   "tipo": "neighbourhood",
+   "lat": -20.78778,
+   "lon": -49.43203
+  },
+  {
+   "nome": "Residencial Monterey",
+   "tipo": "neighbourhood",
+   "lat": -20.76115,
+   "lon": -49.35008
+  },
+  {
+   "nome": "Residencial Morada do Sol",
+   "tipo": "neighbourhood",
+   "lat": -20.74657,
+   "lon": -49.39657
+  },
+  {
+   "nome": "Residencial Nato Vetorazzo",
+   "tipo": "suburb",
+   "lat": -20.79026,
+   "lon": -49.44176
+  },
+  {
+   "nome": "Residencial Padilha",
+   "tipo": "neighbourhood",
+   "lat": -20.76512,
+   "lon": -49.38311
+  },
+  {
+   "nome": "Residencial Palestra",
+   "tipo": "suburb",
+   "lat": -20.80237,
+   "lon": -49.43121
+  },
+  {
+   "nome": "Residencial Parque dos Ipês 1",
+   "tipo": "neighbourhood",
+   "lat": -20.79624,
+   "lon": -49.48231
+  },
+  {
+   "nome": "Residencial Parque dos Ipês 2",
+   "tipo": "neighbourhood",
+   "lat": -20.80041,
+   "lon": -49.48917
+  },
+  {
+   "nome": "Residencial Por do Sol",
+   "tipo": "suburb",
+   "lat": -20.91804,
+   "lon": -49.46029
+  },
+  {
+   "nome": "Residencial Portal do Sul",
+   "tipo": "neighbourhood",
+   "lat": -20.90275,
+   "lon": -49.44264
+  },
+  {
+   "nome": "Residencial Professor Matheus",
+   "tipo": "neighbourhood",
+   "lat": -20.83471,
+   "lon": -49.49369
+  },
+  {
+   "nome": "Residencial Quinta da Mata",
+   "tipo": "neighbourhood",
+   "lat": -20.83024,
+   "lon": -49.35554
+  },
+  {
+   "nome": "Residencial Regissol",
+   "tipo": "suburb",
+   "lat": -20.80343,
+   "lon": -49.49852
+  },
+  {
+   "nome": "Residencial Regissol II",
+   "tipo": "neighbourhood",
+   "lat": -20.80087,
+   "lon": -49.49328
+  },
+  {
+   "nome": "Residencial Santa Ana",
+   "tipo": "neighbourhood",
+   "lat": -20.75595,
+   "lon": -49.36579
+  },
+  {
+   "nome": "Residencial Santa Angela",
+   "tipo": "neighbourhood",
+   "lat": -20.79538,
+   "lon": -49.40374
+  },
+  {
+   "nome": "Residencial Santa Cruz",
+   "tipo": "neighbourhood",
+   "lat": -20.78777,
+   "lon": -49.44559
+  },
+  {
+   "nome": "Residencial Santa Inês",
+   "tipo": "neighbourhood",
+   "lat": -20.77877,
+   "lon": -49.39014
+  },
+  {
+   "nome": "Residencial Santa Regina",
+   "tipo": "neighbourhood",
+   "lat": -20.85836,
+   "lon": -49.32973
+  },
+  {
+   "nome": "Residencial São Thomaz",
+   "tipo": "neighbourhood",
+   "lat": -20.76422,
+   "lon": -49.43395
+  },
+  {
+   "nome": "Residencial São Thomaz 2",
+   "tipo": "neighbourhood",
+   "lat": -20.76591,
+   "lon": -49.43434
+  },
+  {
+   "nome": "Residencial Setparque Avenida 2",
+   "tipo": "neighbourhood",
+   "lat": -20.75807,
+   "lon": -49.39263
+  },
+  {
+   "nome": "Residencial Setsul",
+   "tipo": "neighbourhood",
+   "lat": -20.85436,
+   "lon": -49.36007
+  },
+  {
+   "nome": "Residencial Setsul 2",
+   "tipo": "neighbourhood",
+   "lat": -20.85941,
+   "lon": -49.35529
+  },
+  {
+   "nome": "Residencial Tabarana",
+   "tipo": "neighbourhood",
+   "lat": -20.72492,
+   "lon": -49.38073
+  },
+  {
+   "nome": "Residencial Terras Alphaville Mirassol",
+   "tipo": "neighbourhood",
+   "lat": -20.79728,
+   "lon": -49.47474
+  },
+  {
+   "nome": "Residencial Três Marias",
+   "tipo": "neighbourhood",
+   "lat": -20.80892,
+   "lon": -49.35098
+  },
+  {
+   "nome": "Residencial Vila Flora",
+   "tipo": "neighbourhood",
+   "lat": -20.78841,
+   "lon": -49.349
+  },
+  {
+   "nome": "Residencial Vila Lobos",
+   "tipo": "neighbourhood",
+   "lat": -20.74357,
+   "lon": -49.40555
+  },
+  {
+   "nome": "Residencial Vila Madalena",
+   "tipo": "neighbourhood",
+   "lat": -20.76668,
+   "lon": -49.35944
+  },
+  {
+   "nome": "Residencial Vila Verde",
+   "tipo": "neighbourhood",
+   "lat": -20.85417,
+   "lon": -49.33387
+  },
+  {
+   "nome": "Residencial Vista Alegre",
+   "tipo": "neighbourhood",
+   "lat": -20.76937,
+   "lon": -49.3912
+  },
+  {
+   "nome": "Residencial Vista Norte",
+   "tipo": "neighbourhood",
+   "lat": -20.74859,
+   "lon": -49.42151
+  },
+  {
+   "nome": "Retalhamento Caparroz",
+   "tipo": "neighbourhood",
+   "lat": -20.81239,
+   "lon": -49.36362
+  },
+  {
+   "nome": "Retalhamento Guilherme Petrucci",
+   "tipo": "neighbourhood",
+   "lat": -20.81467,
+   "lon": -49.35402
+  },
+  {
+   "nome": "Retalhamento Jesus Ferreira",
+   "tipo": "neighbourhood",
+   "lat": -20.81434,
+   "lon": -49.35309
+  },
+  {
+   "nome": "Retalhamento Stefanini",
+   "tipo": "neighbourhood",
+   "lat": -20.82788,
+   "lon": -49.40673
+  },
+  {
+   "nome": "Retalhamento Vânia Marta",
+   "tipo": "neighbourhood",
+   "lat": -20.78803,
+   "lon": -49.37152
+  },
+  {
+   "nome": "Roseiral",
+   "tipo": "neighbourhood",
+   "lat": -20.81722,
+   "lon": -49.36083
+  },
+  {
+   "nome": "Santa Filomena",
+   "tipo": "neighbourhood",
+   "lat": -20.78402,
+   "lon": -49.35031
+  },
+  {
+   "nome": "Santos Dumont",
+   "tipo": "neighbourhood",
+   "lat": -20.81766,
+   "lon": -49.39897
+  },
+  {
+   "nome": "São Deocleciano",
+   "tipo": "suburb",
+   "lat": -20.79059,
+   "lon": -49.34386
+  },
+  {
+   "nome": "São Francisco",
+   "tipo": "neighbourhood",
+   "lat": -20.8476,
+   "lon": -49.38286
+  },
+  {
+   "nome": "São João I (Olímpia)",
+   "tipo": "neighbourhood",
+   "lat": -20.78834,
+   "lon": -49.30765
+  },
+  {
+   "nome": "São Miguel Arcanjo I",
+   "tipo": "neighbourhood",
+   "lat": -20.91285,
+   "lon": -49.35431
+  },
+  {
+   "nome": "São Miguel Arcanjo II",
+   "tipo": "suburb",
+   "lat": -20.90354,
+   "lon": -49.39172
+  },
+  {
+   "nome": "São Pedro - Mineiro",
+   "tipo": "neighbourhood",
+   "lat": -20.71758,
+   "lon": -49.40186
+  },
+  {
+   "nome": "São Raphael",
+   "tipo": "neighbourhood",
+   "lat": -20.79026,
+   "lon": -49.30546
+  },
+  {
+   "nome": "Setlife Mirassol",
+   "tipo": "neighbourhood",
+   "lat": -20.82276,
+   "lon": -49.46984
+  },
+  {
+   "nome": "Setparque Horizonte",
+   "tipo": "neighbourhood",
+   "lat": -20.75464,
+   "lon": -49.40816
+  },
+  {
+   "nome": "Setvalley",
+   "tipo": "neighbourhood",
+   "lat": -20.74795,
+   "lon": -49.33106
+  },
+  {
+   "nome": "Setvalley 2",
+   "tipo": "neighbourhood",
+   "lat": -20.74406,
+   "lon": -49.33194
+  },
+  {
+   "nome": "Setvalley 3",
+   "tipo": "neighbourhood",
+   "lat": -20.74398,
+   "lon": -49.32821
+  },
+  {
+   "nome": "Solo Sagrado",
+   "tipo": "suburb",
+   "lat": -20.78094,
+   "lon": -49.40793
+  },
+  {
+   "nome": "Solo Sagrado I",
+   "tipo": "neighbourhood",
+   "lat": -20.77658,
+   "lon": -49.41463
+  },
+  {
+   "nome": "Terras de São Lucas",
+   "tipo": "neighbourhood",
+   "lat": -20.73233,
+   "lon": -49.31609
+  },
+  {
+   "nome": "Terravista Residence Club",
+   "tipo": "neighbourhood",
+   "lat": -20.81909,
+   "lon": -49.46573
+  },
+  {
+   "nome": "Urban Fortes 1",
+   "tipo": "neighbourhood",
+   "lat": -20.77219,
+   "lon": -49.33677
+  },
+  {
+   "nome": "Vila Aeroporto",
+   "tipo": "suburb",
+   "lat": -20.81264,
+   "lon": -49.49115
+  },
+  {
+   "nome": "Vila Anchieta",
+   "tipo": "neighbourhood",
+   "lat": -20.79521,
+   "lon": -49.37369
+  },
+  {
+   "nome": "Vila Angélica",
+   "tipo": "neighbourhood",
+   "lat": -20.80338,
+   "lon": -49.37558
+  },
+  {
+   "nome": "Vila Aurora",
+   "tipo": "neighbourhood",
+   "lat": -20.82205,
+   "lon": -49.37844
+  },
+  {
+   "nome": "Vila Azul",
+   "tipo": "suburb",
+   "lat": -20.90052,
+   "lon": -49.36232
+  },
+  {
+   "nome": "Vila Bancária",
+   "tipo": "neighbourhood",
+   "lat": -20.81771,
+   "lon": -49.39389
+  },
+  {
+   "nome": "Vila Boa Esperança",
+   "tipo": "neighbourhood",
+   "lat": -20.78958,
+   "lon": -49.38257
+  },
+  {
+   "nome": "Vila Bom Jesus",
+   "tipo": "neighbourhood",
+   "lat": -20.81672,
+   "lon": -49.37886
+  },
+  {
+   "nome": "Vila Clementina",
+   "tipo": "neighbourhood",
+   "lat": -20.77386,
+   "lon": -49.37543
+  },
+  {
+   "nome": "Vila Cristina",
+   "tipo": "neighbourhood",
+   "lat": -20.81261,
+   "lon": -49.36587
+  },
+  {
+   "nome": "Vila Diniz",
+   "tipo": "neighbourhood",
+   "lat": -20.82021,
+   "lon": -49.3682
+  },
+  {
+   "nome": "Vila Dório",
+   "tipo": "neighbourhood",
+   "lat": -20.81352,
+   "lon": -49.36425
+  },
+  {
+   "nome": "Vila Elmaz",
+   "tipo": "suburb",
+   "lat": -20.76962,
+   "lon": -49.37563
+  },
+  {
+   "nome": "Vila Elvira",
+   "tipo": "neighbourhood",
+   "lat": -20.81123,
+   "lon": -49.36246
+  },
+  {
+   "nome": "Vila Ercília",
+   "tipo": "neighbourhood",
+   "lat": -20.81419,
+   "lon": -49.37058
+  },
+  {
+   "nome": "Vila Esplanada",
+   "tipo": "neighbourhood",
+   "lat": -20.79427,
+   "lon": -49.38351
+  },
+  {
+   "nome": "Vila Falavina",
+   "tipo": "neighbourhood",
+   "lat": -20.79012,
+   "lon": -49.38425
+  },
+  {
+   "nome": "Vila Fiorezzi",
+   "tipo": "neighbourhood",
+   "lat": -20.8198,
+   "lon": -49.3821
+  },
+  {
+   "nome": "Vila Goyos",
+   "tipo": "neighbourhood",
+   "lat": -20.80514,
+   "lon": -49.36435
+  },
+  {
+   "nome": "Vila Hipódromo",
+   "tipo": "neighbourhood",
+   "lat": -20.81863,
+   "lon": -49.35317
+  },
+  {
+   "nome": "Vila Ideal",
+   "tipo": "neighbourhood",
+   "lat": -20.80301,
+   "lon": -49.36209
+  },
+  {
+   "nome": "Vila Imperial",
+   "tipo": "neighbourhood",
+   "lat": -20.816,
+   "lon": -49.39121
+  },
+  {
+   "nome": "Vila Ipiranga",
+   "tipo": "neighbourhood",
+   "lat": -20.79283,
+   "lon": -49.36923
+  },
+  {
+   "nome": "Vila Itália",
+   "tipo": "neighbourhood",
+   "lat": -20.808,
+   "lon": -49.40703
+  },
+  {
+   "nome": "Vila Lisboa",
+   "tipo": "neighbourhood",
+   "lat": -20.79767,
+   "lon": -49.37249
+  },
+  {
+   "nome": "Vila Maceno",
+   "tipo": "neighbourhood",
+   "lat": -20.80514,
+   "lon": -49.37375
+  },
+  {
+   "nome": "Vila Mafalda II",
+   "tipo": "neighbourhood",
+   "lat": -20.77339,
+   "lon": -49.41974
+  },
+  {
+   "nome": "Vila Maria",
+   "tipo": "neighbourhood",
+   "lat": -20.80843,
+   "lon": -49.39331
+  },
+  {
+   "nome": "Vila Mayor",
+   "tipo": "neighbourhood",
+   "lat": -20.78254,
+   "lon": -49.38813
+  },
+  {
+   "nome": "Vila Moreira",
+   "tipo": "neighbourhood",
+   "lat": -20.79147,
+   "lon": -49.38324
+  },
+  {
+   "nome": "Vila Mossoró",
+   "tipo": "neighbourhood",
+   "lat": -20.78998,
+   "lon": -49.37036
+  },
+  {
+   "nome": "Vila Nossa Senhora da Paz",
+   "tipo": "neighbourhood",
+   "lat": -20.81259,
+   "lon": -49.39298
+  },
+  {
+   "nome": "Vila Nossa Senhora da Penha",
+   "tipo": "neighbourhood",
+   "lat": -20.78936,
+   "lon": -49.39434
+  },
+  {
+   "nome": "Vila Nossa Senhora de Fátima",
+   "tipo": "neighbourhood",
+   "lat": -20.82309,
+   "lon": -49.40029
+  },
+  {
+   "nome": "Vila Nossa Senhora do Carmo",
+   "tipo": "neighbourhood",
+   "lat": -20.79189,
+   "lon": -49.36986
+  },
+  {
+   "nome": "Vila Novaes",
+   "tipo": "neighbourhood",
+   "lat": -20.78766,
+   "lon": -49.37448
+  },
+  {
+   "nome": "Vila Pompéia",
+   "tipo": "neighbourhood",
+   "lat": -20.80358,
+   "lon": -49.32866
+  },
+  {
+   "nome": "Vila Redentora",
+   "tipo": "suburb",
+   "lat": -20.82007,
+   "lon": -49.38596
+  },
+  {
+   "nome": "Vila Santa Cândida",
+   "tipo": "neighbourhood",
+   "lat": -20.82934,
+   "lon": -49.39871
+  },
+  {
+   "nome": "Vila Santa Cruz",
+   "tipo": "neighbourhood",
+   "lat": -20.8184,
+   "lon": -49.37412
+  },
+  {
+   "nome": "Vila Santa Isabel",
+   "tipo": "neighbourhood",
+   "lat": -20.79612,
+   "lon": -49.36911
+  },
+  {
+   "nome": "Vila Santa Tereza",
+   "tipo": "neighbourhood",
+   "lat": -20.81298,
+   "lon": -49.36079
+  },
+  {
+   "nome": "Vila Santo Antônio",
+   "tipo": "neighbourhood",
+   "lat": -20.82239,
+   "lon": -49.38056
+  },
+  {
+   "nome": "Vila São Joaquim",
+   "tipo": "neighbourhood",
+   "lat": -20.82653,
+   "lon": -49.37696
+  },
+  {
+   "nome": "Vila São José",
+   "tipo": "neighbourhood",
+   "lat": -20.82655,
+   "lon": -49.39398
+  },
+  {
+   "nome": "Vila São José Operário",
+   "tipo": "neighbourhood",
+   "lat": -20.81213,
+   "lon": -49.42882
+  },
+  {
+   "nome": "Vila São Judas Tadeu",
+   "tipo": "neighbourhood",
+   "lat": -20.82229,
+   "lon": -49.35279
+  },
+  {
+   "nome": "Vila São Luiz Gonzaga",
+   "tipo": "neighbourhood",
+   "lat": -20.7891,
+   "lon": -49.37162
+  },
+  {
+   "nome": "Vila São Manoel",
+   "tipo": "neighbourhood",
+   "lat": -20.83095,
+   "lon": -49.40189
+  },
+  {
+   "nome": "Vila São Pedro",
+   "tipo": "neighbourhood",
+   "lat": -20.8251,
+   "lon": -49.39513
+  },
+  {
+   "nome": "Vila Sinibaldi",
+   "tipo": "neighbourhood",
+   "lat": -20.82519,
+   "lon": -49.38054
+  },
+  {
+   "nome": "Vila Souza",
+   "tipo": "neighbourhood",
+   "lat": -20.81264,
+   "lon": -49.49794
+  },
+  {
+   "nome": "Vila Toninho",
+   "tipo": "suburb",
+   "lat": -20.84716,
+   "lon": -49.3386
+  },
+  {
+   "nome": "Vila União",
+   "tipo": "neighbourhood",
+   "lat": -20.78153,
+   "lon": -49.402
+  },
+  {
+   "nome": "Vila Verde",
+   "tipo": "neighbourhood",
+   "lat": -20.82159,
+   "lon": -49.49634
+  },
+  {
+   "nome": "Vila Zilda",
+   "tipo": "neighbourhood",
+   "lat": -20.79532,
+   "lon": -49.38874
+  },
+  {
+   "nome": "Villa Cassini",
+   "tipo": "neighbourhood",
+   "lat": -20.79528,
+   "lon": -49.33084
+  },
+  {
+   "nome": "Village Fama",
+   "tipo": "suburb",
+   "lat": -20.93026,
+   "lon": -49.45586
+  },
+  {
+   "nome": "Village Mirassol 1",
+   "tipo": "neighbourhood",
+   "lat": -20.82138,
+   "lon": -49.48023
+  },
+  {
+   "nome": "Village Mirassol 2",
+   "tipo": "neighbourhood",
+   "lat": -20.82159,
+   "lon": -49.4834
+  },
+  {
+   "nome": "Village Mirassol 3",
+   "tipo": "neighbourhood",
+   "lat": -20.82491,
+   "lon": -49.47981
+  },
+  {
+   "nome": "Village Mirassol 4",
+   "tipo": "neighbourhood",
+   "lat": -20.82492,
+   "lon": -49.47468
+  },
+  {
+   "nome": "Villaggio São Judas",
+   "tipo": "neighbourhood",
+   "lat": -20.81924,
+   "lon": -49.35963
+  },
+  {
+   "nome": "Villagio Vitoria",
+   "tipo": "neighbourhood",
+   "lat": -20.77902,
+   "lon": -49.37567
+  },
+  {
+   "nome": "Vista Alegre",
+   "tipo": "neighbourhood",
+   "lat": -20.80528,
+   "lon": -49.34503
+  },
+  {
+   "nome": "Vista Alegre I",
+   "tipo": "neighbourhood",
+   "lat": -20.87425,
+   "lon": -49.38688
+  },
+  {
+   "nome": "Vista Alegre II",
+   "tipo": "neighbourhood",
+   "lat": -20.87729,
+   "lon": -49.39091
+  },
+  {
+   "nome": "Vista Alegre III",
+   "tipo": "neighbourhood",
+   "lat": -20.87729,
+   "lon": -49.395
+  },
+  {
+   "nome": "Vivendas",
+   "tipo": "suburb",
+   "lat": -20.84648,
+   "lon": -49.39732
+  }
+ ]
+}

@@ -2,6 +2,8 @@ const { describe, it, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  DAY_MS,
+  advanceClock,
   api,
   registerUser,
   insertPartner,
@@ -203,11 +205,88 @@ describe('API — recompensas', () => {
       item.title.includes('Resgate confirmado'),
     );
     assert.ok(redeemNotification);
-    assert.equal(redeemNotification.category, 'sistema');
+    assert.equal(redeemNotification.category, 'recompensa');
+    assert.equal(redeemNotification.target, '/recompensas');
     assert.match(redeemNotification.message, new RegExp(body.redemption.code));
 
     const detail = await api(`/rewards/${reward.id}`, { token });
     assert.equal(detail.body.reward.stock, 2);
+  });
+
+  it('cupom traz valor, validade, limite por pessoa e endereço do parceiro', async () => {
+    const { token, user } = await registerUser();
+    const { reward } = setupReward({
+      pointsCost: 100,
+      valueCents: 200,
+      validityDays: 10,
+      perUserLimit: 2,
+    });
+    insertRecord({ userId: user.id, points: 1000 });
+
+    const before = await api(`/rewards/${reward.id}`, { token });
+    assert.equal(before.body.reward.valueCents, 200);
+    assert.equal(before.body.reward.validityDays, 10);
+    assert.equal(before.body.reward.perUserLimit, 2);
+    assert.equal(before.body.reward.redeemedByMe, 0);
+    assert.equal(before.body.reward.limitReached, false);
+    assert.equal(before.body.reward.partnerAddress, 'Rua de Teste, 10');
+
+    const first = await api(`/rewards/${reward.id}/redeem`, { method: 'POST', token });
+    assert.equal(first.status, 201);
+    assert.equal(first.body.redemption.status, 'active');
+    assert.equal(first.body.redemption.valueCents, 200);
+    assert.equal(first.body.redemption.usedAt, null);
+    assert.equal(
+      new Date(first.body.redemption.expiresAt) - new Date(first.body.redemption.dateTime),
+      10 * DAY_MS,
+    );
+    const second = await api(`/rewards/${reward.id}/redeem`, { method: 'POST', token });
+    assert.equal(second.body.reward.redeemedByMe, 2);
+    assert.equal(second.body.reward.limitReached, true);
+
+    const third = await api(`/rewards/${reward.id}/redeem`, { method: 'POST', token });
+    assert.equal(third.status, 409);
+    assert.equal(third.body.error, 'Você já resgatou esta recompensa 2 vezes nos últimos 30 dias.');
+
+    // Passados 30 dias, o limite volta (e os cupons antigos venceram).
+    advanceClock(31 * DAY_MS);
+    const later = await api(`/rewards/${reward.id}/redeem`, { method: 'POST', token });
+    assert.equal(later.status, 201);
+    const history = await api('/rewards/redemptions', { token });
+    assert.deepEqual(
+      history.body.redemptions.map((item) => item.status),
+      ['active', 'expired', 'expired'],
+    );
+  });
+
+  it('conferência do cupom pelo parceiro', async () => {
+    const owner = await registerUser({ email: 'dona@test.app' });
+    const other = await registerUser({ email: 'outra@test.app' });
+    const { reward } = setupReward({ pointsCost: 100 });
+    insertRecord({ userId: owner.user.id, points: 500 });
+    const { body } = await api(`/rewards/${reward.id}/redeem`, {
+      method: 'POST',
+      token: owner.token,
+    });
+    const path = `/rewards/redemptions/${body.redemption.id}/use`;
+
+    const notMine = await api(path, { method: 'POST', token: other.token, body: { pin: '4321' } });
+    assert.equal(notMine.status, 404);
+    assert.equal(notMine.body.error, 'Cupom não encontrado.');
+
+    for (const pin of [undefined, '', '0000', 4321]) {
+      const wrong = await api(path, { method: 'POST', token: owner.token, body: { pin } });
+      assert.equal(wrong.status, 403, `pin=${pin}`);
+    }
+
+    const used = await api(path, { method: 'POST', token: owner.token, body: { pin: '4321' } });
+    assert.equal(used.status, 200);
+    assert.equal(used.body.redemption.status, 'used');
+    assert.ok(used.body.redemption.usedAt);
+
+    const again = await api(path, { method: 'POST', token: owner.token, body: { pin: '4321' } });
+    assert.equal(again.status, 409);
+    assert.equal(again.body.error, 'Este cupom já foi utilizado.');
   });
 
   it('não permite resgatar recompensa inexistente', async () => {

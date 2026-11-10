@@ -5,7 +5,7 @@
 node_modules/
 
 # Banco local e artefatos de execução
-data/
+/data/
 *.log
 
 # Ambiente

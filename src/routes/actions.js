@@ -1,130 +1,47 @@
 const express = require('express');
-const db = require('../db');
 const { authRequired } = require('../middleware/auth');
-const {
-  actionFromRow,
-  recordFromRow,
-  createNotification,
-} = require('../services/serializers');
-const { getSummary, getAchievements } = require('../services/progress');
+const { fail, bodyOf } = require('../services/errors');
+const { clean } = require('../services/util');
+const { findAction, actionJson, listActions, registerAction } = require('../services/actions');
+const { summary, achievements } = require('../services/progress');
+const db = require('../db');
 
 const router = express.Router();
 
 router.use(authRequired);
 
+function requireAction(id) {
+  const action = findAction(id);
+  if (!action) fail(404, 'Ação não encontrada.');
+  return action;
+}
+
 router.get('/', (req, res) => {
-  const { category, search, sort } = req.query;
-  let rows = db.prepare('SELECT * FROM actions').all();
-
-  if (category && category !== 'all') {
-    const normalized = String(category).toLowerCase();
-    rows = rows.filter(
-      (row) =>
-        row.category.toLowerCase() === normalized ||
-        row.category_label.toLowerCase() === normalized,
-    );
-  }
-
-  if (search) {
-    const term = String(search).toLowerCase();
-    rows = rows.filter((row) => {
-      const tags = JSON.parse(row.tags || '[]');
-      return (
-        row.title.toLowerCase().includes(term) ||
-        row.description.toLowerCase().includes(term) ||
-        tags.some((tag) => String(tag).toLowerCase().includes(term))
-      );
-    });
-  }
-
-  const actions = rows.map(actionFromRow);
-
-  if (sort === 'points') {
-    actions.sort((a, b) => b.points - a.points);
-  } else if (sort === 'alphabetical') {
-    actions.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
-  } else {
-    actions.sort((a, b) => a.id - b.id);
-  }
-
-  return res.json({ actions });
+  return res.json({ actions: listActions(req.user, req.query) });
 });
 
 router.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM actions WHERE id = ?').get(req.params.id);
-  if (!row) {
-    return res.status(404).json({ error: 'Ação não encontrada.' });
-  }
-  return res.json({ action: actionFromRow(row) });
+  return res.json({ action: actionJson(requireAction(req.params.id), req.user) });
 });
 
 router.post('/:id/records', (req, res) => {
-  const row = db.prepare('SELECT * FROM actions WHERE id = ?').get(req.params.id);
-  if (!row) {
-    return res.status(404).json({ error: 'Ação não encontrada.' });
+  const action = requireAction(req.params.id);
+  const data = bodyOf(req);
+  const quantity = data.quantity ?? 1;
+  if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > 50) {
+    fail(400, 'A quantidade deve ser um número inteiro a partir de 1.');
   }
+  let notes = clean(data.notes);
+  if (notes.length > 500) notes = notes.slice(0, 500);
 
-  const quantity = Math.min(Math.max(Number(req.body?.quantity) || 1, 1), 50);
-  const notes = req.body?.notes ? String(req.body.notes).trim().slice(0, 500) : null;
-  const action = actionFromRow(row);
-  const points = action.points * quantity;
-  const liters = action.liters * quantity;
-
-  const previous = new Set(
-    getAchievements(req.user.id)
-      .filter((achievement) => achievement.isUnlocked)
-      .map((achievement) => achievement.title),
-  );
-
-  const created = new Date().toISOString();
-  const info = db
-    .prepare(
-      `INSERT INTO action_records
-        (user_id, action_id, title, category_label, icon, points, liters, quantity, notes, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      req.user.id,
-      action.id,
-      action.title,
-      action.categoryLabel,
-      action.icon,
-      points,
-      liters,
-      quantity,
-      notes,
-      created,
-    );
-
-  const record = recordFromRow(
-    db.prepare('SELECT * FROM action_records WHERE id = ?').get(info.lastInsertRowid),
-  );
-
-  createNotification(
-    req.user.id,
-    'sistema',
-    'Ação registrada!',
-    `Você registrou "${action.title}" e ganhou +${points} pontos.`,
-  );
-
-  const achievements = getAchievements(req.user.id);
-  const newAchievements = achievements.filter(
-    (achievement) => achievement.isUnlocked && !previous.has(achievement.title),
-  );
-  for (const achievement of newAchievements) {
-    createNotification(
-      req.user.id,
-      'conquista',
-      'Novo selo desbloqueado!',
-      `Você conquistou o selo "${achievement.title}".`,
-    );
-  }
-
+  const result = db.transaction(() =>
+    registerAction(req.user, action, { quantity, notes: notes || null }),
+  )();
+  const sum = summary(req.user);
   return res.status(201).json({
-    record,
-    summary: getSummary(req.user.id),
-    achievements,
-    newAchievements,
+    ...result,
+    summary: sum,
+    achievements: achievements(req.user),
   });
 });
 

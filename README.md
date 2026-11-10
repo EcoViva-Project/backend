@@ -5,13 +5,18 @@
 ![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white)
 ![JWT](https://img.shields.io/badge/Auth-JWT-D63AFF?logo=jsonwebtokens&logoColor=white)
 
-API REST do **EcoViva**, aplicativo de hábitos sustentáveis. Gerencia contas,
-catálogo de ações ecológicas, registros de ações, pontuação/níveis, conquistas,
-desafios coletivos, notificações, o feed da comunidade e o resgate de
-recompensas oferecidas por empresas parceiras.
+API REST do **EcoViva**, aplicativo de hábitos sustentáveis de São José do Rio
+Preto (SP). Gerencia contas, catálogo de ações ecológicas, registros, pontos,
+níveis e teto semanal, conquistas, desafios coletivos, notificações, o feed e os
+números do bairro, o mapa, os pontos de coleta e os cupons de parceiros.
+
+É o **modo online** do app. O app também tem um **modo local** (uma API em Dart
+dentro do próprio app, em `eco-app/lib/core/local/`), que é a implementação de
+referência: esta API segue as mesmas regras e devolve o mesmo JSON. Os casos de
+teste do modo local foram portados para `test/local-api.test.js`.
 
 - **App (Flutter):** https://github.com/EcoViva-Project/app
-- **API local:** `http://127.0.0.1:3000/api`
+- **API local:** `http://127.0.0.1:3100/api`
 - **Health check:** `GET /api/health`
 
 ---
@@ -23,40 +28,27 @@ recompensas oferecidas por empresas parceiras.
 | **Node.js** | 22.9+ | Runtime (usa `--env-file-if-exists`) |
 | **Express** | 5.3 | Framework HTTP e rotas |
 | **better-sqlite3** | 13.0 | Banco SQLite síncrono, WAL e FKs |
-| **bcryptjs** | 3.0 | Hash de senhas (custo 10) |
+| **bcryptjs** | 3.0 | Hash de senhas (custo configurável, padrão 10) |
 | **jsonwebtoken** | 9.0 | JWT com expiração configurável |
 | **cors** | 2.8 | Liberação de CORS |
 
-Sem ORM, sem TypeScript e sem `dotenv`: o schema é criado em `src/db.js` e as
-variáveis de ambiente são lidas via `process.env` (carregadas pelos scripts com
-`--env-file-if-exists=.env`).
+Sem ORM, sem TypeScript e sem `dotenv`. O esquema do banco é criado e
+atualizado por migrações numeradas (`src/migrations.js`).
 
 ---
 
 ## 🚀 Como rodar
 
-### Pré-requisitos
-- **Node.js 22.9+** (ou 20.19+, pela flag `--env-file-if-exists`)
-- npm
-
-### Passos
-
 ```bash
-npm install
-
-# cria o .env a partir do template
+npm ci            # no Windows sem compilador C++: npm ci --ignore-scripts
 cp .env.example .env
-
-# popula o banco com dados de demonstração
-npm run seed
-
-# sobe a API com reload automático
-npm run dev
+npm run seed      # APAGA os dados e recria a demonstração
+npm run dev       # sobe em http://127.0.0.1:3100/api, com reload
 ```
 
-A API sobe em `http://127.0.0.1:3000/api` e cria o SQLite em `./data/eco.db`.
-
-> `npm run seed` **apaga todos os dados existentes** e recria o cenário demo.
+A porta padrão é **3100** (a 3000 costuma estar ocupada por outros sistemas).
+No app, aponte para ela com
+`--dart-define=ECO_API_URL=http://127.0.0.1:3100/api`.
 
 ### Conta de demonstração
 
@@ -64,20 +56,26 @@ A API sobe em `http://127.0.0.1:3000/api` e cria o SQLite em `./data/eco.db`.
 | --- | --- |
 | E-mail | `clara@eco.app` |
 | Senha | `eco1234` |
-| Bairro | Jardim das Flores |
+| Bairro | Boa Vista |
+| Código dos parceiros (conferência de cupom) | `1234` |
 
-O seed cria 1 usuária, 6 ações, 42 registros (~1.240 pontos e 28 L economizados),
-4 desafios, 4 publicações com comentários, 5 parceiros e 9 recompensas
-(produto, serviço, desconto e jogo).
+A carga é a mesma do modo local do app (`local_seed.dart`): 6 ações, 4 desafios,
+6 parceiros, 12 recompensas, a meta coletiva de 400 ações por semana, 14 dicas,
+os pontos de coleta de `src/data/pontos-de-coleta-rio-preto.json`, a Clara e 18
+vizinhos fictícios em bairros reais. O histórico é gerado **passando pelas mesmas
+funções de regra das rotas** (limites, teto, desafios e conquistas), relativo ao
+momento da carga. Em uma quarta-feira à tarde a Clara fica com 375 dos 400 pontos
+da semana, um desafio em andamento (3 de 7), um concluído e cupons ativo, usado e
+vencido.
 
 ### Scripts
 
 | Comando | O que faz |
 | --- | --- |
-| `npm run dev` | Sobe com `node --watch` e recarrega ao salvar |
-| `npm start` | Sobe sem watch (produção) |
-| `npm run seed` | Recria o banco e insere os dados demo |
-| `npm test` | Runner nativo do Node (`node --test`) com 56 testes de integração |
+| `npm run dev` | Sobe com `node --watch` |
+| `npm start` | Sobe sem watch |
+| `npm run seed` | Apaga e recria os dados de demonstração. Com `NODE_ENV=production` é recusado; use `npm run seed -- --force` se for isso mesmo |
+| `npm test` | Testes de integração com `node --test` (banco em memória, porta aleatória) |
 
 ---
 
@@ -85,175 +83,221 @@ O seed cria 1 usuária, 6 ações, 42 registros (~1.240 pontos e 28 L economizad
 
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
-| `PORT` | `3000` | Porta HTTP (inteiro positivo) |
-| `NODE_ENV` | `development` | Em `production` exige `JWT_SECRET` forte e oculta o `devCode` |
-| `JWT_SECRET` | `eco-dev-secret-change-me` | Segredo dos tokens — **obrigatório e com ≥32 caracteres em produção** |
-| `JWT_EXPIRES_IN` | `7d` | Validade do token (formato aceito pelo `jsonwebtoken`) |
-| `RESET_CODE_TTL_MINUTES` | `30` | Validade do código de recuperação (inteiro positivo) |
-| `DB_PATH` | `<repo>/data/eco.db` | Caminho do arquivo SQLite |
-| `CORS_ORIGIN` | `*` | Origem(ns) permitida(s); aceita lista separada por vírgula |
+| `PORT` | `3100` | Porta HTTP |
+| `NODE_ENV` | `development` | `production` liga as travas de segurança abaixo |
+| `JWT_SECRET` | *(vazio)* | Obrigatório em produção, com ≥ 32 caracteres e diferente dos exemplos do repositório. Vazio fora de produção: a API gera um segredo aleatório e o guarda em `.jwt-secret` ao lado do banco (com `DB_PATH=:memory:`, um segredo por processo) |
+| `JWT_EXPIRES_IN` | `7d` | Validade do token |
+| `BCRYPT_ROUNDS` | `10` | Custo do bcrypt (4 a 15) |
+| `RESET_CODE_TTL_MINUTES` | `30` | Validade do código de recuperação |
+| `EXPOSE_RESET_CODE` | `false` | `true` devolve o código de recuperação na resposta (`devCode`), para testes e demonstração. **Proibido em produção** |
+| `AUTH_RATE_LIMIT_MAX` | `10` | Tentativas por IP + e-mail na janela (por IP: 5 vezes isso) |
+| `AUTH_RATE_LIMIT_WINDOW_MINUTES` | `15` | Janela do limitador |
+| `WEEKLY_POINTS_CAP` | `400` | Teto semanal de pontos de ações |
+| `TRUST_PROXY` | `false` | `true` atrás de proxy, para o limitador ver o IP real |
+| `DB_PATH` | `<repo>/data/eco.db` | Arquivo SQLite |
+| `CORS_ORIGIN` | `*` | Origens permitidas, separadas por vírgula |
 
-O arquivo `.env` é ignorado pelo Git; `.env.example` é o template versionado.
-Se rodar `node src/server.js` diretamente (sem npm), use
-`node --env-file-if-exists=.env src/server.js`.
+Valores inválidos interrompem a inicialização (`src/config.js`).
 
-A configuração é carregada em `src/config.js` (função `loadConfig`). Valores
-inválidos de `PORT`/`RESET_CODE_TTL_MINUTES` interrompem a inicialização, e com
-`NODE_ENV=production` a API se recusa a subir sem um `JWT_SECRET` forte
-(diferente do padrão de desenvolvimento e com ao menos 32 caracteres).
+---
+
+## 📏 Regras de negócio (resumo)
+
+O raciocínio de cada número está em `ECONOMIA-DE-PONTOS.md`, na pasta acima dos
+dois repositórios. Código: `src/services/economy.js` (espelho de `economy.dart`).
+
+- **Fuso:** horário de Brasília fixo (UTC−3). Dia, mês, semana e sequência usam o
+  dia local; cada registro guarda `local_date`.
+- **Ações:** pontos por esforço e impacto; limite por dia (ou por semana, no
+  mutirão). Quantidade inteira de 1 a 50.
+- **Teto semanal:** 400 pontos de ações por semana (segunda 00:00 a domingo
+  23:59 em Brasília). Passou do teto, a ação é registrada com os pontos que cabem
+  (`points`) e guarda o valor cheio (`base_points`); conta para desafios,
+  conquistas, litros e sequência.
+- **Bônus** de desafio concluído (`kind = 'challenge'`) e de conquista
+  (`kind = 'achievement'`) não entram no teto nem contam como ação.
+- **Níveis** pelos pontos ganhos (não caem ao gastar): Semente 0, Broto 300,
+  Muda 1.000, Árvore 2.500, Floresta 6.000.
+- **Conquistas:** 10 selos com critérios reais (sequência de dias, litros, dias
+  com ação de Água etc.), gravados em `user_achievements` com a data, com crédito
+  do bônus e notificação.
+- **Desafios:** avançam sozinhos ao registrar ação da categoria (`days`: uma
+  etapa por dia; `actions`: pela quantidade). Prazo pessoal de `duration_days`
+  a partir da entrada; vencido pode ser recomeçado. `participants` = base +
+  quem entrou.
+- **Cupons:** preço = valor do benefício × 50 pontos por real (itens digitais
+  com 20% de desconto). Limite por pessoa em 30 dias, validade por recompensa,
+  situação calculada (`active`, `used`, `expired`) e conferência com o código
+  do parceiro.
+- **Privacidade:** a posição de uma pessoa é o centro do bairro com um
+  deslocamento fixo de algumas centenas de metros (mesmo cálculo do app); o
+  endereço completo e o e-mail nunca saem nas rotas de comunidade; quem desliga
+  `privacyLocation` some do mapa dos outros.
 
 ---
 
 ## 🔌 Endpoints
 
-Todas as rotas ficam sob `/api`. Exceto `health`, `register`, `login`,
-`forgot-password` e `reset-password`, todas exigem:
-
-```http
-Authorization: Bearer <token>
-```
+Todas as rotas ficam sob `/api` e respondem JSON; erros vêm como
+`{ "error": "..." }`. Exceto `health`, `register`, `login`, `forgot-password` e
+`reset-password`, todas exigem `Authorization: Bearer <token>`.
 
 ### Auth — `/api/auth`
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `POST` | `/register` | Cria conta (`name`, `email`, `password`, `neighborhood?`) |
-| `POST` | `/login` | Retorna `{ token, user }` |
+| `POST` | `/register` | `name`, `email`, `password` e, opcionais, `cep`, `street`, `number`, `complement`, `neighborhood`, `city`, `state` |
+| `POST` | `/login` | `{ token, user }` (limitado) |
 | `GET` | `/me` | Usuário autenticado |
-| `POST` | `/forgot-password` | Gera código de 6 dígitos (TTL configurável) |
-| `POST` | `/reset-password` | Troca a senha com `email`, `code`, `password` |
+| `POST` | `/forgot-password` | Mesma resposta com e sem conta (limitado) |
+| `POST` | `/reset-password` | `email`, `code`, `password`; invalida as sessões antigas (limitado) |
+| `POST` | `/change-password` | **Novo.** `currentPassword`, `newPassword`; devolve um token novo e encerra as outras sessões |
+
+O usuário devolvido traz `city`, `address` (só para ele mesmo) e `location`
+(posição aproximada).
 
 ### Usuário — `/api/users`
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
 | `GET` | `/me` | `user` + `summary` + `achievements` |
-| `PATCH` | `/me` | `name`, `neighborhood`, `monthlyGoal`, `weeklyGoal` |
+| `PATCH` | `/me` | `name` (2–80), `neighborhood` (até 80; recalcula a posição), campos de endereço, `monthlyGoal` e `weeklyGoal` (inteiros de 1 a 100). Trocar o nome atualiza publicações e comentários |
 | `PATCH` | `/me/preferences` | `notificationsEnabled`, `remindersEnabled`, `privacyProfile`, `privacyLocation` |
 
-### Ações e registros — `/api/actions` e `/api/records`
+### Ações, registros e progresso
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `GET` | `/actions` | Lista com `?category=`, `?search=`, `?sort=points\|alphabetical` |
-| `GET` | `/actions/:id` | Detalhe da ação |
-| `POST` | `/actions/:id/records` | Registra a ação (`quantity` 1–50, `notes` ≤ 500) |
-| `GET` | `/records` | Histórico do usuário (`?limit=` 1–500, padrão 100) |
+| `GET` | `/actions` | Catálogo com `dailyLimit`, `weeklyLimit`, `usedToday`, `usedThisWeek`, `remaining`, `neighborsToday` (`?category=`, `?search=`, `?sort=points\|alphabetical`) |
+| `GET` | `/actions/:id` | Detalhe |
+| `POST` | `/actions/:id/records` | `{ quantity?, notes? }` → `{ record, capReached, challengeUpdates, newAchievements, summary, achievements }`; 409 ao passar do limite da ação |
+| `GET` | `/records` | Histórico (`?limit=` 1–500), com `kind`, `basePoints` e `capped` |
+| `GET` | `/progress` | `summary` + `achievements` |
+| `GET` | `/progress/achievements` | As 10 conquistas |
 
-> O app Flutter atual mantém o catálogo de ações embutido e consome apenas o
-> `POST /actions/:id/records` e o `GET /records`. Os endpoints de listagem e
-> detalhe existem para futuras versões e para uso direto da API.
-
-Registrar uma ação retorna `record`, `summary`, `achievements` e
-`newAchievements`, além de criar notificação. Pontos e litros são multiplicados
-pela `quantity`.
-
-### Progresso — `/api/progress`
-
-| Método | Rota | Descrição |
-| --- | --- | --- |
-| `GET` | `/` | `summary` + `achievements` |
-| `GET` | `/achievements` | Lista das 10 conquistas com progresso |
+O `summary` traz `points`, `pointsEarned`, `pointsSpent`, `actionsCount`,
+`activeDays`, `monthlyActions`, `monthlyGoal`, `monthlyGoalProgress`,
+`litersSaved`, `level`, `levelNumber`, `levelName`, `levelFloor`, `nextLevelAt`,
+`weeklyPoints`, `weeklyCap`, `weeklyRemaining`, `weekResetsAt`, `streakDays` e
+`bestStreak`.
 
 ### Desafios — `/api/challenges`
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `GET` | `/` | Desafios com progresso do usuário |
+| `GET` | `/` | Com `stepMode`, `durationDays`, `daysLeft`, `expired`, `stepDoneToday`, `endsAt`, `completedAt`, `participants` |
 | `GET` | `/:id` | Detalhe |
-| `POST` | `/:id/join` | Entra no desafio |
-| `POST` | `/:id/progress` | Avança `steps`; ao concluir, credita a recompensa |
+| `POST` | `/:id/join` | Entra (ou recomeça um desafio vencido) |
+| `POST` | `/:id/progress` | **Removido:** responde 410 (o desafio avança sozinho) |
 
 ### Notificações — `/api/notifications`
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `GET` | `/` | Lista + `unreadCount` |
+| `GET` | `/` | 100 mais recentes (com `target`, a tela do app) + `unreadCount` de todas |
 | `POST` | `/read-all` | Marca todas como lidas |
-| `PATCH` | `/:id/read` | Marca uma como lida |
-| `DELETE` | `/:id` | Remove uma |
-| `DELETE` | `/` | Remove todas |
+| `PATCH` | `/:id/read` | Marca como lida; `{ "read": false }` desmarca |
+| `DELETE` | `/:id` e `/` | Remove uma ou todas |
 
-### Comunidade — `/api/community`
+Categorias: `sistema`, `conquista`, `desafio`, `comunidade` e `recompensa`.
+
+### Comunidade e bairro
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `GET` | `/posts` | Feed (últimos 100) com likes e comentários |
-| `POST` | `/posts` | Publica (`content` 3–1000) |
-| `POST` | `/posts/:id/like` | Alterna like (toggle) |
-| `GET` | `/posts/:id/comments` | Comentários |
-| `POST` | `/posts/:id/comments` | Comenta (`content` ≤ 500) |
-| `DELETE` | `/posts/:id` | Só o autor pode excluir |
+| `GET` | `/community/posts` | Feed (últimos 100) com `isMine`, curtidas e comentários |
+| `POST` | `/community/posts` | Publica (3–1000) |
+| `POST` | `/community/posts/:id/like` | Alterna a curtida |
+| `GET`/`POST` | `/community/posts/:id/comments` | Lista ou comenta (até 500) |
+| `DELETE` | `/community/posts/:id` | Só o autor |
+| `GET` | `/community/stats` | **Novo.** Membros, vizinhos ativos (7 dias), ações de hoje e da semana, litros e pontos da semana, meta coletiva, ranking dos 5 primeiros (nome curto) e a posição do usuário |
+| `GET` | `/community/map` | **Novo.** Centro, o próprio usuário, vizinhos que aceitaram aparecer (posição aproximada, nome curto) e pontos de coleta com coordenada |
+| `GET` | `/collection-points` | **Novo.** Pontos de coleta com `distanceMeters`, do mais perto ao mais longe (`?type=`, `?search=`) |
+| `GET` | `/places/neighborhoods` | **Novo.** Busca de bairros para o cadastro (`?search=`) |
+| `GET` | `/tips/today` | **Novo.** Dica do dia |
 
 ### Recompensas — `/api/rewards`
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| `GET` | `/` | Recompensas ativas (`?category=`, `?search=`, `?sort=points\|points_desc\|alphabetical`) |
-| `GET` | `/:id` | Detalhe da recompensa |
-| `POST` | `/:id/redeem` | Resgata, debita pontos, reduz estoque e gera código único |
-| `GET` | `/redemptions` | Histórico de resgates + `summary` atualizado |
-
-Categorias: `produto`, `servico`, `desconto` e `jogo`. O saldo disponível
-(`summary.points`) é `pointsEarned − pointsSpent`; o nível continua calculado
-pelos pontos ganhos. Resgates devolvem 404 (recompensa inexistente/inativa) ou
-409 (esgotada/saldo insuficiente) em JSON `{ "error": "..." }`.
+| `GET` | `/` | Ativas, com `valueCents`, `validityDays`, `perUserLimit`, `redeemedByMe`, `limitReached`, `partnerAddress` (`?category=`, `?search=`, `?sort=points\|points_desc\|alphabetical`) |
+| `GET` | `/:id` | Detalhe |
+| `POST` | `/:id/redeem` | Resgata (em transação): 404, ou 409 se esgotada, sem saldo ou no limite |
+| `GET` | `/redemptions` | Cupons com `status`, `expiresAt`, `usedAt` + `summary` |
+| `POST` | `/redemptions/:id/use` | **Novo.** `{ pin }` do parceiro: 403 código errado, 409 usado ou vencido, 404 de outra pessoa |
 
 ### Exemplos
 
 ```bash
-# health
-curl http://127.0.0.1:3000/api/health
+curl http://127.0.0.1:3100/api/health
 
-# login
-curl -X POST http://127.0.0.1:3000/api/auth/login \
+curl -X POST http://127.0.0.1:3100/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"clara@eco.app","password":"eco1234"}'
 
-# registrar ação (id 1, quantidade 2)
-curl -X POST http://127.0.0.1:3000/api/actions/1/records \
+curl -X POST http://127.0.0.1:3100/api/actions/4/records \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"quantity":2,"notes":"Registro pelo curl"}'
+  -d '{"quantity":1}'
 ```
 
 ---
 
-## 🗄️ Modelo de dados
+## 🗄️ Banco e migrações
 
-| Tabela | Conteúdo |
-| --- | --- |
-| `users` | Conta, bairro, iniciais, metas e preferências |
-| `password_resets` | Códigos de recuperação (TTL + uso único) |
-| `actions` | Catálogo de ações sustentáveis |
-| `action_records` | Registros do usuário (pontos, litros, quantidade, notas) |
-| `notifications` | Notificações por usuário |
-| `challenges` | Desafios semanais e coletivos |
-| `challenge_progress` | Progresso por usuário/desafio |
-| `posts` | Publicações da comunidade |
-| `post_likes` | Likes (PK composta `post_id` + `user_id`) |
-| `post_comments` | Comentários |
-| `partners` | Empresas parceiras que criam recompensas |
-| `rewards` | Produtos, serviços, descontos e itens de jogos |
-| `redemptions` | Resgates com código, pontos gastos e status |
+`PRAGMA user_version` guarda a versão do esquema. Na inicialização,
+`src/migrations.js` aplica as migrações que faltam, cada uma numa transação:
 
-O SQLite roda com `journal_mode = WAL` e `foreign_keys = ON`. O schema é
-idempotente (`CREATE TABLE IF NOT EXISTS`) e aplicado na inicialização.
+- **Versão 1:** o esquema original (ramo `main`).
+- **Versão 2:** teto, limites, conquistas, desafios com prazo, cupons com
+  validade, endereço e posição, segurança e as tabelas do bairro. Preenche os
+  dados existentes: `kind`, `base_points = points`, `local_date` em UTC−3,
+  `expires_at = created_at + 30 dias`, `used_at`, `joined_at`, posição
+  aproximada dos usuários e o hash dos códigos de recuperação pendentes.
 
-### Regras de negócio
+Um banco novo passa pelas duas migrações, então banco novo e banco antigo
+migrado chegam ao mesmo esquema (há um teste para isso). Para mudar o esquema,
+acrescente uma migração no fim da lista; nunca edite uma que já foi aplicada.
 
-- **Categorias:** Água, Reciclagem, Alimentação, Transporte, Energia, Espaços Públicos.
-- **Níveis por pontos:** Semente (0–499), Broto (500–999), Guardiã Verde
-  (1.000–1.499), Guardiã do Bairro (1.500–2.499), Guardiã do Planeta (2.500+).
-- **10 conquistas** calculadas em tempo real (primeira ação, litros, dias ativos,
-  desafios, variedade de categorias etc.).
-- **Desafio concluído** gera um `action_record` com os pontos da recompensa e uma
-  notificação.
-- **Notificações automáticas** ao registrar ação, desbloquear conquista,
-  concluir desafio, receber comentário e resgatar recompensa.
-- **Recompensas de parceiros:** troca de pontos por produtos/serviços/descontos/
-  itens de jogos. O resgate reduz o estoque, gera código `ECO-XXXXXXXX` e
-  registra no histórico; o nível não cai ao gastar pontos.
+Tabelas: `users`, `password_resets`, `actions`, `action_records`,
+`notifications`, `challenges`, `challenge_progress`, `partners`, `rewards`,
+`redemptions`, `posts`, `post_likes`, `post_comments`, `user_achievements`,
+`collection_points`, `community_goals` e `tips`.
+
+---
+
+## 🔒 Segurança
+
+O que existe:
+
+- **Limite de tentativas** em memória para login, `forgot-password`,
+  `reset-password` e `change-password`: por IP + e-mail e por IP; passou do
+  limite, 429 com `Retry-After`.
+- **Código de recuperação** de 6 dígitos guardado só como hash, válido por 30
+  minutos e invalidado depois de 5 tentativas erradas. A resposta de
+  `forgot-password` é a mesma para e-mail com e sem conta.
+- **Sessões:** o token leva a versão de sessão do usuário (`token_version`);
+  redefinir ou trocar a senha invalida todos os tokens antigos.
+- **Segredo JWT:** em produção é obrigatório, longo e diferente dos exemplos do
+  repositório; fora de produção, sem `JWT_SECRET`, é aleatório (nunca um valor
+  fixo e público).
+- **Validação** de nome, e-mail, senha, bairro, CEP e metas
+  (`src/services/validation.js`); JSON malformado → 400 e corpo acima de 1 MB → 413.
+- `npm run seed` recusa rodar em produção sem `--force`.
+
+O que **não** existe (limitações conhecidas):
+
+- **Não há envio de e-mail.** O código de recuperação só chega a alguém com
+  `EXPOSE_RESET_CODE=true` (demonstração). Fora disso, a recuperação de senha
+  não funciona até integrar um provedor de e-mail.
+- O limitador fica na memória do processo: zera ao reiniciar e não serve para
+  várias instâncias. Atrás de proxy, ligue `TRUST_PROXY=true`.
+- Não há verificação de e-mail no cadastro nem bloqueio de conta.
+- O código de conferência dos parceiros é um PIN curto, digitado no aparelho de
+  quem resgatou; serve para a demonstração, não como garantia contra fraude.
+- `CORS_ORIGIN` padrão é `*`; em produção, liste as origens.
+- SQLite em arquivo único: não indicado para várias instâncias. Sem CI nem
+  Dockerfile.
 
 ---
 
@@ -261,46 +305,43 @@ idempotente (`CREATE TABLE IF NOT EXISTS`) e aplicado na inicialização.
 
 ```txt
 eco-backend/
-├── data/                    # SQLite (ignorado no Git)
+├── data/                      # SQLite e .jwt-secret (ignorados no Git)
 ├── src/
-│   ├── middleware/auth.js   # assinatura e verificação de JWT
-│   ├── routes/              # auth, users, actions, records, progress,
-│   │                        # notifications, challenges, community, rewards
+│   ├── data/                  # bairros (OpenStreetMap) e pontos de coleta
+│   ├── middleware/            # auth (JWT + versão de sessão), rateLimit
+│   ├── routes/                # auth, users, actions, records, progress,
+│   │                          # notifications, challenges, community, rewards, places
 │   ├── services/
-│   │   ├── progress.js      # níveis, resumo e conquistas
-│   │   └── serializers.js   # mapeamento row -> JSON
-│   ├── app.js               # Express, CORS, JSON e rotas
-│   ├── config.js            # env vars e defaults
-│   ├── db.js                # conexão + schema
-│   ├── seed.js              # dados de demonstração
-│   └── server.js            # listen + shutdown gracioso
-├── test/                    # testes de integração (node:test)
-│   ├── helpers.js           # servidor efêmero + SQLite em memória + fixtures
-│   └── *.test.js            # auth, users, actions, progress, challenges,
-│                            # community e rewards
-├── .env.example
-├── package.json
-└── package-lock.json
+│   │   ├── economy.js         # teto, níveis, fuso e datas
+│   │   ├── clock.js           # relógio injetável (testes e seed)
+│   │   ├── places.js          # bairros, posição aproximada e distância
+│   │   ├── actions.js         # catálogo e registro de ações
+│   │   ├── progress.js        # resumo e conquistas
+│   │   ├── challenges.js      # desafios
+│   │   ├── rewards.js         # recompensas e cupons
+│   │   ├── community.js       # feed, estatísticas, mapa, pontos de coleta, dica
+│   │   ├── users.js           # contas e perfil
+│   │   ├── validation.js      # validação dos dados de conta
+│   │   ├── notifications.js, util.js, errors.js
+│   ├── migrations.js          # esquema versionado (PRAGMA user_version)
+│   ├── app.js, config.js, db.js, seed.js, server.js
+└── test/                      # node:test, banco em memória, porta aleatória
+    ├── local-api.test.js      # casos do modo local do app, portados
+    ├── security.test.js, migrations.test.js, config.test.js
+    └── auth, users, actions, progress-notifications, challenges, community,
+        rewards, cors
 ```
 
 ---
 
-## ⚠️ Segurança e limitações
+## 🗺️ Dados e créditos
 
-- `CORS_ORIGIN` tem default `*` (qualquer origem) — em produção defina a lista de
-  origens permitidas separada por vírgula.
-- `JWT_SECRET` tem default de desenvolvimento; em produção a API só sobe com um
-  segredo forte (≥32 caracteres).
-- Sem rate limit, verificação de e-mail ou proteção contra força bruta.
-- O código de recuperação é retornado na resposta quando `NODE_ENV !== production`
-  (não há provedor de e-mail integrado).
-- Sem CI ou Dockerfile.
-- SQLite local (arquivo único) — não indicado para múltiplas instâncias.
-- `npm test` cobre os endpoints principais com `node:test` e SQLite em memória;
-  ainda não há testes de carga, rate limit ou integração com e-mail real.
+- **Bairros** (`src/data/bairros-rio-preto.json`): © colaboradores do
+  [OpenStreetMap](https://www.openstreetmap.org/copyright), licença
+  [ODbL](https://opendatacommons.org/licenses/odbl/). O mapa do app deve exibir
+  a atribuição "© colaboradores do OpenStreetMap" (a rota `/community/map` a
+  devolve em `attribution`).
+- **Pontos de coleta** (`src/data/pontos-de-coleta-rio-preto.json`): cada ponto
+  traz a própria fonte (`source_url`, `source_date`, `confidence`).
 
----
-
-## 👨‍💻 Créditos
-
-Projeto acadêmico/comunitário **EcoViva** — API em Node.js, Express e SQLite.
+Projeto acadêmico **EcoViva** — API em Node.js, Express e SQLite.

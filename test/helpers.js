@@ -4,25 +4,18 @@
 process.env.NODE_ENV = 'test';
 process.env.DB_PATH = ':memory:';
 process.env.JWT_SECRET = 'eco-test-secret';
+process.env.EXPOSE_RESET_CODE = 'true';
+process.env.BCRYPT_ROUNDS = '4';
 
 const db = require('../src/db');
 const app = require('../src/app');
+const clock = require('../src/services/clock');
+const economy = require('../src/services/economy');
+const seed = require('../src/seed');
+const { resetRateLimits } = require('../src/middleware/rateLimit');
 
-const TABLES = [
-  'redemptions',
-  'rewards',
-  'partners',
-  'post_comments',
-  'post_likes',
-  'posts',
-  'challenge_progress',
-  'challenges',
-  'notifications',
-  'action_records',
-  'actions',
-  'password_resets',
-  'users',
-];
+/** Quarta-feira, 11/11/2026, 15:00 em Brasília (dia da feira). */
+const WEDNESDAY = new Date('2026-11-11T18:00:00.000Z');
 
 let server = null;
 let baseUrl = null;
@@ -45,25 +38,34 @@ async function stopServer() {
   baseUrl = null;
 }
 
+/** Banco vazio, relógio parado na quarta da feira e limitador zerado. */
 function resetDatabase() {
-  const clear = db.transaction(() => {
-    for (const table of TABLES) {
-      db.prepare(`DELETE FROM ${table}`).run();
-    }
-    db.prepare('DELETE FROM sqlite_sequence').run();
-  });
-  clear();
+  db.transaction(() => seed.wipe())();
+  clock.setNow(WEDNESDAY);
+  resetRateLimits();
 }
 
-async function api(path, { method = 'GET', token, body } = {}) {
-  const headers = {};
+/** Banco com os dados de demonstração, com o relógio parado na quarta da feira. */
+function seedDemo(now = WEDNESDAY) {
+  resetRateLimits();
+  clock.setNow(now);
+  seed.runSeed({ now });
+}
+
+/** Avança (ou volta) o relógio da aplicação. */
+function advanceClock(ms) {
+  clock.setNow(new Date(clock.now().getTime() + ms));
+}
+
+async function api(path, { method = 'GET', token, body, rawBody, headers: extra = {} } = {}) {
+  const headers = { ...extra };
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (body !== undefined || rawBody !== undefined) headers['Content-Type'] = 'application/json';
 
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: rawBody !== undefined ? rawBody : body !== undefined ? JSON.stringify(body) : undefined,
   });
 
   const text = await response.text();
@@ -75,7 +77,7 @@ async function api(path, { method = 'GET', token, body } = {}) {
       parsed = text;
     }
   }
-  return { status: response.status, body: parsed };
+  return { status: response.status, body: parsed, headers: response.headers };
 }
 
 async function registerUser({
@@ -101,6 +103,20 @@ async function login(email, password) {
   return response.body.token;
 }
 
+async function loginDemo() {
+  return login(seed.DEMO_EMAIL, seed.DEMO_PASSWORD);
+}
+
+function insertRow(table, values) {
+  const columns = Object.keys(values);
+  const info = db
+    .prepare(
+      `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
+    )
+    .run(...columns.map((column) => values[column]));
+  return db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(info.lastInsertRowid);
+}
+
 function insertAction({
   title = 'Ação de teste',
   description = 'Descrição da ação de teste',
@@ -109,55 +125,61 @@ function insertAction({
   icon = 'water_drop',
   points = 15,
   liters = 12,
+  dailyLimit = null,
+  weeklyLimit = null,
   info = 'Hábito diário',
   infoIcon = 'schedule',
   tags = ['agua', 'teste'],
   footerInfo = 'Rodapé',
   footerIcon = 'groups',
 } = {}) {
-  const result = db
-    .prepare(
-      `INSERT INTO actions
-        (title, description, category, category_label, icon, points, liters, info, info_icon, tags, footer_info, footer_icon)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      title,
-      description,
-      category,
-      categoryLabel,
-      icon,
-      points,
-      liters,
-      info,
-      infoIcon,
-      JSON.stringify(tags),
-      footerInfo,
-      footerIcon,
-    );
-  return db.prepare('SELECT * FROM actions WHERE id = ?').get(result.lastInsertRowid);
+  return insertRow('actions', {
+    title,
+    description,
+    category,
+    category_label: categoryLabel,
+    icon,
+    points,
+    liters,
+    daily_limit: dailyLimit,
+    weekly_limit: weeklyLimit,
+    info,
+    info_icon: infoIcon,
+    tags: JSON.stringify(tags),
+    footer_info: footerInfo,
+    footer_icon: footerIcon,
+  });
 }
 
 function insertRecord({
   userId,
   actionId = null,
+  kind = 'action',
   title = 'Ação de teste',
   categoryLabel = 'Água',
   icon = 'water_drop',
   points = 15,
+  basePoints = points,
   liters = 12,
   quantity = 1,
   notes = null,
-  createdAt = new Date().toISOString(),
+  createdAt = clock.now().toISOString(),
 } = {}) {
-  const info = db
-    .prepare(
-      `INSERT INTO action_records
-        (user_id, action_id, title, category_label, icon, points, liters, quantity, notes, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(userId, actionId, title, categoryLabel, icon, points, liters, quantity, notes, createdAt);
-  return db.prepare('SELECT * FROM action_records WHERE id = ?').get(info.lastInsertRowid);
+  return insertRow('action_records', {
+    user_id: userId,
+    action_id: actionId,
+    kind,
+    title,
+    category_label: categoryLabel,
+    icon,
+    points,
+    base_points: basePoints,
+    liters,
+    quantity,
+    notes,
+    created_at: createdAt,
+    local_date: economy.dateKey(createdAt),
+  });
 }
 
 function insertChallenge({
@@ -166,44 +188,42 @@ function insertChallenge({
   category = 'Água',
   icon = 'water_drop',
   targetSteps = 3,
+  stepMode = 'actions',
   pointsReward = 100,
-  participants = 10,
-  daysLeft = 5,
+  baseParticipants = 10,
+  durationDays = 7,
   isWeekly = 0,
 } = {}) {
-  const info = db
-    .prepare(
-      `INSERT INTO challenges
-        (title, description, category, icon, target_steps, points_reward, participants, days_left, is_weekly)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      title,
-      description,
-      category,
-      icon,
-      targetSteps,
-      pointsReward,
-      participants,
-      daysLeft,
-      isWeekly,
-    );
-  return db.prepare('SELECT * FROM challenges WHERE id = ?').get(info.lastInsertRowid);
+  return insertRow('challenges', {
+    title,
+    description,
+    category,
+    icon,
+    target_steps: targetSteps,
+    step_mode: stepMode,
+    points_reward: pointsReward,
+    base_participants: baseParticipants,
+    duration_days: durationDays,
+    is_weekly: isWeekly,
+  });
 }
 
 function insertPartner({
   name = 'Parceiro de teste',
   description = 'Descrição do parceiro de teste',
   logoIcon = 'storefront',
-  createdAt = new Date().toISOString(),
+  address = 'Rua de Teste, 10',
+  pin = '4321',
+  createdAt = clock.now().toISOString(),
 } = {}) {
-  const info = db
-    .prepare(
-      `INSERT INTO partners (name, description, logo_icon, created_at)
-       VALUES (?, ?, ?, ?)`,
-    )
-    .run(name, description, logoIcon, createdAt);
-  return db.prepare('SELECT * FROM partners WHERE id = ?').get(info.lastInsertRowid);
+  return insertRow('partners', {
+    name,
+    description,
+    logo_icon: logoIcon,
+    address,
+    pin,
+    created_at: createdAt,
+  });
 }
 
 function insertReward({
@@ -214,47 +234,54 @@ function insertReward({
   categoryLabel = 'Produto',
   icon = 'shopping_bag',
   pointsCost = 100,
+  valueCents = 200,
   stock = 10,
   terms = 'Termos de teste',
+  validityDays = 30,
+  perUserLimit = null,
   isFeatured = 0,
   active = 1,
-  createdAt = new Date().toISOString(),
+  createdAt = clock.now().toISOString(),
 } = {}) {
-  const info = db
-    .prepare(
-      `INSERT INTO rewards
-        (partner_id, title, description, category, category_label, icon,
-         points_cost, stock, terms, is_featured, active, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      partnerId,
-      title,
-      description,
-      category,
-      categoryLabel,
-      icon,
-      pointsCost,
-      stock,
-      terms,
-      isFeatured,
-      active,
-      createdAt,
-    );
-  return db.prepare('SELECT * FROM rewards WHERE id = ?').get(info.lastInsertRowid);
+  return insertRow('rewards', {
+    partner_id: partnerId,
+    title,
+    description,
+    category,
+    category_label: categoryLabel,
+    icon,
+    points_cost: pointsCost,
+    value_cents: valueCents,
+    stock,
+    terms,
+    validity_days: validityDays,
+    per_user_limit: perUserLimit,
+    is_featured: isFeatured,
+    active,
+    created_at: createdAt,
+  });
 }
 
 module.exports = {
+  WEDNESDAY,
+  DAY_MS: economy.DAY_MS,
   api,
   registerUser,
   login,
+  loginDemo,
+  insertRow,
   insertAction,
   insertRecord,
   insertChallenge,
   insertPartner,
   insertReward,
   resetDatabase,
+  seedDemo,
+  advanceClock,
   startServer,
   stopServer,
+  clock,
+  economy,
+  seed,
   db,
 };

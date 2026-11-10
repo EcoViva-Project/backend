@@ -1,23 +1,65 @@
+// O módulo de configuração lê o ambiente ao ser carregado: banco em memória
+// para não criar arquivos em `data/`.
+process.env.DB_PATH = ':memory:';
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const {
   loadConfig,
-  DEFAULT_JWT_SECRET,
+  DEFAULT_PORT,
+  JWT_SECRET_FILE,
+  KNOWN_EXAMPLE_SECRETS,
   MIN_JWT_SECRET_LENGTH,
 } = require('../src/config');
 
+function tempDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'eco-config-'));
+}
+
 test('config: usa valores padrão quando o ambiente está vazio', () => {
-  const config = loadConfig({});
+  const config = loadConfig({ DB_PATH: ':memory:' });
 
   assert.equal(config.nodeEnv, 'development');
   assert.equal(config.isProduction, false);
-  assert.equal(config.port, 3000);
-  assert.equal(config.jwtSecret, DEFAULT_JWT_SECRET);
+  assert.equal(config.port, 3100);
+  assert.equal(DEFAULT_PORT, 3100);
   assert.equal(config.jwtExpiresIn, '7d');
   assert.equal(config.resetCodeTtlMinutes, 30);
+  assert.equal(config.exposeResetCode, false);
+  assert.equal(config.weeklyPointsCap, 400);
+  assert.equal(config.authRateLimitMax, 10);
+  assert.equal(config.authRateLimitWindowMinutes, 15);
+  assert.equal(config.bcryptRounds, 10);
+  assert.equal(config.trustProxy, false);
   assert.equal(config.corsOrigin, '*');
-  assert.ok(config.dbPath.endsWith('eco.db'));
+  assert.ok(loadConfig({}).dbPath.endsWith('eco.db'));
+});
+
+test('config: sem JWT_SECRET fora de produção gera um segredo aleatório', () => {
+  const first = loadConfig({ DB_PATH: ':memory:' });
+  const second = loadConfig({ DB_PATH: ':memory:' });
+  assert.ok(first.jwtSecret.length >= MIN_JWT_SECRET_LENGTH);
+  assert.notEqual(first.jwtSecret, second.jwtSecret);
+  assert.equal(first.jwtSecretSource, 'process');
+  assert.equal(KNOWN_EXAMPLE_SECRETS.includes(first.jwtSecret), false);
+});
+
+test('config: com banco em arquivo o segredo gerado fica salvo ao lado do banco', () => {
+  const dir = tempDir();
+  try {
+    const dbPath = path.join(dir, 'eco.db');
+    const first = loadConfig({ DB_PATH: dbPath });
+    const second = loadConfig({ DB_PATH: dbPath });
+    assert.equal(first.jwtSecretSource, 'file');
+    assert.equal(first.jwtSecret, second.jwtSecret);
+    assert.equal(fs.readFileSync(path.join(dir, JWT_SECRET_FILE), 'utf8').trim(), first.jwtSecret);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('config: lê as variáveis informadas', () => {
@@ -28,6 +70,12 @@ test('config: lê as variáveis informadas', () => {
     JWT_EXPIRES_IN: '1d',
     DB_PATH: './tmp/teste.db',
     RESET_CODE_TTL_MINUTES: '10',
+    EXPOSE_RESET_CODE: 'true',
+    WEEKLY_POINTS_CAP: '500',
+    AUTH_RATE_LIMIT_MAX: '3',
+    AUTH_RATE_LIMIT_WINDOW_MINUTES: '5',
+    BCRYPT_ROUNDS: '12',
+    TRUST_PROXY: 'true',
     CORS_ORIGIN: 'http://localhost:8080, https://eco.example.com',
   });
 
@@ -35,34 +83,42 @@ test('config: lê as variáveis informadas', () => {
   assert.equal(config.isProduction, false);
   assert.equal(config.port, 4100);
   assert.equal(config.jwtSecret, 'segredo-de-homologacao-com-32-caracteres');
+  assert.equal(config.jwtSecretSource, 'env');
   assert.equal(config.jwtExpiresIn, '1d');
   assert.equal(config.dbPath, './tmp/teste.db');
   assert.equal(config.resetCodeTtlMinutes, 10);
+  assert.equal(config.exposeResetCode, true);
+  assert.equal(config.weeklyPointsCap, 500);
+  assert.equal(config.authRateLimitMax, 3);
+  assert.equal(config.authRateLimitWindowMinutes, 5);
+  assert.equal(config.bcryptRounds, 12);
+  assert.equal(config.trustProxy, true);
   assert.equal(config.corsOrigin, 'http://localhost:8080, https://eco.example.com');
 });
 
-test('config: rejeita PORT inválida', () => {
+test('config: rejeita valores numéricos e booleanos inválidos', () => {
+  const memory = { DB_PATH: ':memory:' };
   for (const value of ['0', '-1', 'abc', '1.5']) {
-    assert.throws(() => loadConfig({ PORT: value }), /PORT/, `PORT=${value} deveria falhar`);
+    assert.throws(() => loadConfig({ ...memory, PORT: value }), /PORT/);
+    assert.throws(
+      () => loadConfig({ ...memory, RESET_CODE_TTL_MINUTES: value }),
+      /RESET_CODE_TTL_MINUTES/,
+    );
+    assert.throws(() => loadConfig({ ...memory, WEEKLY_POINTS_CAP: value }), /WEEKLY_POINTS_CAP/);
   }
+  assert.throws(() => loadConfig({ ...memory, EXPOSE_RESET_CODE: 'talvez' }), /EXPOSE_RESET_CODE/);
+  assert.throws(() => loadConfig({ ...memory, BCRYPT_ROUNDS: '2' }), /BCRYPT_ROUNDS/);
 });
 
-test('config: rejeita RESET_CODE_TTL_MINUTES inválida', () => {
-  for (const value of ['0', '-30', 'dez', '1.5']) {
+test('config: exige JWT_SECRET próprio e forte em produção', () => {
+  assert.throws(() => loadConfig({ NODE_ENV: 'production' }), /JWT_SECRET/);
+  for (const secret of KNOWN_EXAMPLE_SECRETS) {
     assert.throws(
-      () => loadConfig({ RESET_CODE_TTL_MINUTES: value }),
-      /RESET_CODE_TTL_MINUTES/,
-      `RESET_CODE_TTL_MINUTES=${value} deveria falhar`,
+      () => loadConfig({ NODE_ENV: 'production', JWT_SECRET: secret }),
+      /JWT_SECRET/,
+      `o exemplo "${secret}" deveria ser recusado`,
     );
   }
-});
-
-test('config: exige JWT_SECRET forte em produção', () => {
-  assert.throws(() => loadConfig({ NODE_ENV: 'production' }), /JWT_SECRET/);
-  assert.throws(
-    () => loadConfig({ NODE_ENV: 'production', JWT_SECRET: DEFAULT_JWT_SECRET }),
-    /JWT_SECRET/,
-  );
   assert.throws(
     () => loadConfig({ NODE_ENV: 'production', JWT_SECRET: 'curto-demais' }),
     /JWT_SECRET/,
@@ -70,7 +126,24 @@ test('config: exige JWT_SECRET forte em produção', () => {
 
   const secret = 'a'.repeat(MIN_JWT_SECRET_LENGTH);
   const config = loadConfig({ NODE_ENV: 'production', JWT_SECRET: secret });
-
   assert.equal(config.isProduction, true);
   assert.equal(config.jwtSecret, secret);
+});
+
+test('config: o JWT_SECRET do .env.example vem vazio', () => {
+  const example = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
+  assert.match(example, /^JWT_SECRET=$/m);
+  assert.match(example, /^PORT=3100$/m);
+});
+
+test('config: produção recusa EXPOSE_RESET_CODE=true', () => {
+  assert.throws(
+    () =>
+      loadConfig({
+        NODE_ENV: 'production',
+        JWT_SECRET: 'b'.repeat(64),
+        EXPOSE_RESET_CODE: 'true',
+      }),
+    /EXPOSE_RESET_CODE/,
+  );
 });
