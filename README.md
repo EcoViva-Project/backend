@@ -46,7 +46,7 @@ npm run seed      # APAGA os dados e recria a demonstração
 npm run dev       # sobe em http://127.0.0.1:3100/api, com reload
 ```
 
-A porta padrão é **3100** (a 3000 costuma estar ocupada por outros sistemas).
+A porta padrão é **3100**.
 No app, aponte para ela com
 `--dart-define=ECO_API_URL=http://127.0.0.1:3100/api`.
 
